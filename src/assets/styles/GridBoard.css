@@ -1,0 +1,101 @@
+/* src/components/GridBoard.css */
+
+.grid-board-container {
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-auto-rows: 100px; /* ROW_HEIGHT */
+  gap: 10px;
+  background-color: #f0f2f5;
+  padding: 10px;
+  border-radius: 8px;
+  min-height: calc(100vh - 80px); /* Adjust based on your header height */
+  position: relative;
+  background-size: calc(100% / 12) 110px;
+  background-image: linear-gradient(to bottom, #d97e7e 1px, transparent 1px), linear-gradient(to right, #d97e7e 1px, transparent 1px);
+}
+
+.grid-widget-item {
+  background-color: #ffffff;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  cursor: grab;
+  user-select: none;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
+.grid-widget-item:active {
+  opacity: 0.7;
+  cursor: grabbing;
+}
+
+.widget-title {
+  font-weight: bold;
+  font-size: 14px;
+  color: #1f2937;
+  /* 제목이 너무 길어져서 버튼을 침범하지 않도록 여백 설정 */
+  margin-right: 8px; 
+}
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0; /* 구분을 위한 가벼운 밑줄 */
+  padding-bottom: 6px;
+}
+.widget-info {
+  font-size: 12px;
+  color: #666;
+  white-space: nowrap; /* 👈 글자가 세로로 찌그러지지 않고 한 줄로 나오게 방지 */
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.widget-memo-content{
+  flex: 1; /* Take up remaining space */
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+  margin-top: 8px;
+  white-space: normal; /* Allow text to wrap */
+  overflow: hidden;
+  text-overflow: ellipsis;
+  overflow-y: auto;
+}
+
+/*위젯 삭제*/
+.widget-delete-btn {
+  background: none;
+  border: none;
+  color: #9ca3af; /* 평소에는 은은한 회색 */
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 0 4px;
+  transition: color 0.2s;
+}
+
+/* 삭제 버튼에 마우스를 올렸을 때만 선명한 빨간색으로 변경 */
+.widget-delete-btn:hover {
+  color: #ff4d4f; 
+}
+
+.widget-resize-handle {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 14px;
+  height: 14px;
+  cursor: se-resize; /* 👈 마우스 커서가 대각선 화살표로 바뀌어야 합니다 */
+  border-right: 2px solid #9ca3af;
+  border-bottom: 2px solid #9ca3af;
+  z-index: 10;
+}

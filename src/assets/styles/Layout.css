@@ -1,0 +1,76 @@
+/* src/styles/Layout.css */
+
+/* 전체 레이아웃 */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width : 100%;
+}
+
+/* 상단 헤더 고정 */
+.dashboard-header {
+  height: 60px;
+  background-color: #ffffff;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  z-index: 10;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+/* Breadcrumb 스타일 */
+.breadcrumb {
+  font-size: 14px;
+  color: #666;
+}
+.breadcrumb .divider {
+  margin: 0 6px;
+  color: #ccc;
+}
+.breadcrumb .current {
+  font-weight: bold;
+  color: #333;
+}
+
+/* 본문 메인 영역 (사이드바 + 메인보드) */
+.main-wrapper {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* 사이드바 애니메이션 */
+.dashboard-sidebar {
+  width: 240px;
+  background-color: #fafafa;
+  border-right: 1px solid #e0e0e0;
+  transition: margin-left 0.3s ease, width 0.3s ease;
+  overflow: hidden;
+}
+
+/* 사이드바 닫혔을 때 */
+.dashboard-sidebar.closed {
+  width: 0px;
+  border-right: none;
+}
+
+.sidebar-content {
+  width: 240px; /* 내부 콘텐츠 너비 고정 */
+  padding: 20px;
+}
+
+/* 메인 그리드 영역 (남은 공간을 100% 채움) */
+.grid-container-wrapper {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background-color: #f5f7fa;
+}
