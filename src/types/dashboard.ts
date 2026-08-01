@@ -1,5 +1,5 @@
 // src/types/dashboard.ts
-
+import type { Dispatch, SetStateAction } from 'react';
 export type WidgetType = 'todo' | 'clock' | 'memo' | 'weather' | 'weather-clock';
 
 export interface Widget {
@@ -30,4 +30,11 @@ export interface WeatherData {
     icon: string;
     city: string;
     humidity: string;
+}
+
+export type setWidgetsType = Dispatch<SetStateAction<Widget[]>>;
+
+export interface MemoWidgetProps {
+  widget: Widget;
+  setWidgets: setWidgetsType;
 }

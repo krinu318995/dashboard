@@ -41,7 +41,7 @@ export const Sidebar  = ({ isOpen } : SidebarProps) => {
           <li draggable onDragStart={(e) => handleDragStart(e, 'todo')}>일정 관리</li>
           <li draggable onDragStart={(e) => handleDragStart(e, 'weather')}>날씨</li>
           <li draggable onDragStart={(e) => handleDragStart(e, 'clock')}>시계</li>
-          <li draggable onDragStart={(e) => handleDragStart(e, 'weather-clock')}>날씨/시계</li>
+          <li draggable onDragStart={(e) => handleDragStart(e, 'weather-clock')}>날씨 / 시계</li>
         </ul>
         <h4>메모</h4>
         <div style={{display:'flex', flexDirection: 'column', gap:'8px' }}>
@@ -60,7 +60,7 @@ export const Sidebar  = ({ isOpen } : SidebarProps) => {
         selectedMemoId &&(
           <div 
           draggable
-          onDragStart={handleMemoDragStart}
+          onDragStart={(e)=>handleMemoDragStart(e, selectedMemoId)}
           style={{padding: '10px',
                 background: '#e6f7ff',
                 border: '1px dashed #1890ff',

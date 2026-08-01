@@ -8,7 +8,7 @@ import type { Widget , WidgetType } from '../../types/dashboard.ts';
 import { ClockWidgets } from '../widgets/ClockWidget.tsx';
 import { WeatherWidget } from '../widgets/WeatherWidget.tsx';
 import { WeatherClockWidget } from '../widgets/WeatherClockWidget.tsx';
-
+import { MemoWidget } from '../widgets/MemoWidget.tsx';
 
 interface GridBoardProps {
   widgets: Widget[];
@@ -180,11 +180,12 @@ export const GridBoard = ({ widgets, setWidgets} : GridBoardProps ) => {
           {widget.type === 'weather' && <WeatherWidget />}
           {widget.type === 'clock' && <ClockWidgets />}
           {widget.type === 'weather-clock' && <WeatherClockWidget />}
-           {widget.type==='memo' && widget.data?.memoText && (
+          {/* {widget.type==='memo' && widget.data?.memoText && (
             <div className='widget-memo-content' style={{marginTop:'auto'}}>
             {widget.data.memoText}
           </div>
-        )}
+          )} */}
+          {widget.type === 'memo' && <MemoWidget widget={widget} setWidgets={setWidgets} />}
           <div className="widget-info">
             위치: ({widget.x}, {widget.y}) | 크기: {widget.w}x{widget.h}
           </div>
