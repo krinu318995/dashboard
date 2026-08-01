@@ -1,25 +1,11 @@
 import react, { useState, useEffect } from 'react';
 import '../../assets/styles/ClockWeather.css';
-
-interface WeatherData {
-    temp: number;
-    condition: string;
-    icon: string;
-    city: string;
-    humidity: string;
-}
+import type { WeatherData } from '../../types/dashboard.ts';
 
 export const WeatherClockWidget = () => {
     const [time, setTeime] = useState(new Date());
     const [weather, setWeather] = useState<WeatherData | null>(null);
 
-    // const [weatherData] = useState({
-    // temp: 24,
-    // condition: '맑음',
-    // icon: '☀️',
-    // city: '서울',
-    // humidity: '45%'
-    // });
 
     useEffect(() => {
         const timer = setInterval(() => setTeime(new Date()), 1000);

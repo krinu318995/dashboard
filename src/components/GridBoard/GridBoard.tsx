@@ -9,15 +9,6 @@ import { ClockWidgets } from '../widgets/ClockWidget.tsx';
 import { WeatherWidget } from '../widgets/WeatherWidget.tsx';
 import { WeatherClockWidget } from '../widgets/WeatherClockWidget.tsx';
 
-// interface Widget {
-//   id: string | number;
-//   type: string;
-//   x: number;
-//   y: number;
-//   w: number;
-//   h: number;
-// }
-
 
 interface GridBoardProps {
   widgets: Widget[];
@@ -27,7 +18,7 @@ interface GridBoardProps {
 export const GridBoard = ({ widgets, setWidgets} : GridBoardProps ) => {
 
   const gridRef = useRef<HTMLDivElement>(null);
-  // "gridRef는 <div> 전용 참조 객체야!"라고 미리 지정해둠
+  // "gridRef는 <div> 전용 참조 객체"라고 미리 지정해둠
 
   const GRID_COLUMNS = 12;
   const ROW_HEIGHT = 100; // 각 행의 높이 (px)

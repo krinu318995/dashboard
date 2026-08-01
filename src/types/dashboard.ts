@@ -22,3 +22,12 @@ export interface Widget {
     memoText?: string;
   };
 }
+
+
+export interface WeatherData {
+    temp: number;
+    condition: string;
+    icon: string;
+    city: string;
+    humidity: string;
+}
