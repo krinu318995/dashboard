@@ -5,7 +5,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
-  width : 100%;
+  width: 100%;
 }
 
 /* 상단 헤더 고정 */
@@ -39,6 +39,10 @@
   font-weight: bold;
   color: #333;
 }
+.breadcrumb-link {
+  text-decoration: none;
+  color: inherit;
+}
 
 /* 본문 메인 영역 (사이드바 + 메인보드) */
 .main-wrapper {
@@ -49,10 +53,12 @@
 
 /* 사이드바 애니메이션 */
 .dashboard-sidebar {
-  width: 240px;
+  width: 280px;
   background-color: #fafafa;
   border-right: 1px solid #e0e0e0;
-  transition: margin-left 0.3s ease, width 0.3s ease;
+  transition:
+    margin-left 0.3s ease,
+    width 0.3s ease;
   overflow: hidden;
 }
 
@@ -73,4 +79,52 @@
   padding: 20px;
   overflow-y: auto;
   background-color: #f5f7fa;
+}
+
+/* .sidebar-content-select-container {
+  display: grid;
+  flex-direction: column;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.sidebar-content-select-container-memo-drag {
+  padding: 10px;
+  background: #e6f7ff;
+  border: 1px dashed #1890ff;
+  border-radius: 4px;
+  cursor: grab;
+  text-align: center;
+  font-size: 13px;
+  width: 100%;
+  min-width: 120px;
+  text-overflow: ellipsis;
+} */
+
+.sidebar-content-select-container {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+  width: 100%;
+  box-sizing: border-box; /* 패딩 포함 계산 */
+}
+
+/* 수정된 드래그 요소 */
+.sidebar-content-select-container-memo-drag {
+  padding: 10px;
+  background: #e6f7ff;
+  border: 1px dashed #1890ff;
+  border-radius: 4px;
+  cursor: grab;
+  text-align: center;
+  font-size: 13px;
+
+  width: 100%;
+  box-sizing: border-box; /* ⭐️ 핵심: padding 20px이 width 안에 포함되도록 강제 */
+  min-width: 0; /* 부모 영역 내에서 자연스럽게 가변 조절 */
+
+  /* 텍스트 줄임표 처리 추가 */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
