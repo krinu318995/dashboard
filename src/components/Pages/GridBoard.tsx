@@ -8,20 +8,25 @@ import type {
   ChangeEvent,
 } from "react";
 import "../../assets/styles/gridboard.css";
-import type { Widget, WidgetType } from "../../types/dashboard.ts";
+import type {
+  Widget,
+  WidgetType,
+  DashboardSharedProps,
+} from "../../types/dashboard.ts";
 
 /**컴포넌트 */
 import { ClockWidgets } from "../widgets/ClockWidget.tsx";
 import { WeatherWidget } from "../widgets/WeatherWidget.tsx";
 import { WeatherClockWidget } from "../widgets/WeatherClockWidget.tsx";
 import { MemoWidget } from "../widgets/MemoWidget.tsx";
+import { TodosWidget } from "../widgets/Todos.tsx";
 
-interface GridBoardProps {
-  widgets: Widget[];
-  setWidgets: Dispatch<SetStateAction<Widget[]>>; // 선택적 prop
-}
-
-export const GridBoard = ({ widgets, setWidgets }: GridBoardProps) => {
+export const GridBoard = ({
+  widgets,
+  setWidgets,
+  tasks,
+  setTasks,
+}: DashboardSharedProps) => {
   const gridRef = useRef<HTMLDivElement>(null);
   // "gridRef는 <div> 전용 참조 객체"라고 미리 지정해둠
 
@@ -237,6 +242,14 @@ export const GridBoard = ({ widgets, setWidgets }: GridBoardProps) => {
             {widget.data.memoText}
           </div>
           )} */}
+          {widget.type === "todo" && (
+            <TodosWidget
+              widgets={widgets}
+              setWidgets={setWidgets}
+              tasks={tasks}
+              setTasks={setTasks}
+            ></TodosWidget>
+          )}
           {widget.type === "memo" && (
             <MemoWidget widget={widget} setWidgets={setWidgets} />
           )}

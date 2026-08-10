@@ -13,7 +13,7 @@ interface SidebarProps {
 }
 
 const WIDGET_LIBRARY_ITEMS: SidebarWidgetItem[] = [
-  { type: "todo", label: "일정 관리", link: "/calendar" }, // 👈 link 존재 (클릭 시 이동)
+  { type: "todo", label: "플래너", link: "/calendar" }, // 👈 link 존재 (클릭 시 이동)
   { type: "weather", label: "날씨" }, // 👈 link 없음 (클릭 반응 없음)
   { type: "clock", label: "시계" }, // 👈 link 없음
   { type: "weather-clock", label: "날씨 / 시계" }, // 👈 link 없음

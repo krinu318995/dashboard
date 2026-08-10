@@ -7,17 +7,28 @@ export interface TodoModalProps {
   selectedDate: string;
   onClose: () => void;
   onSave: (newTask: TaskItem) => void;
+  selectedTask?: TaskItem | null;
 }
 export const TodoModal: FC<TodoModalProps> = ({
   isOpen,
   selectedDate,
   onClose,
   onSave,
+  selectedTask,
 }) => {
   const [title, setTitle] = useState("");
   const [contents, setContents] = useState("");
   const [imageUrl, setImageUrl] = useState("");
 
+  useEffect(() => {
+    if (selectedTask) {
+      setTitle(selectedTask.title);
+      setContents(selectedTask.content);
+    } else {
+      setTitle("");
+      setContents("");
+    }
+  }, [selectedDate, isOpen]);
   if (!isOpen) {
     return null;
   }
@@ -40,6 +51,7 @@ export const TodoModal: FC<TodoModalProps> = ({
     };
 
     onSave(newTask);
+    alert("저장되었습니다.");
     setTitle("");
     setContents("");
     setImageUrl("");
@@ -48,30 +60,33 @@ export const TodoModal: FC<TodoModalProps> = ({
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <h3>일정 추가 ({selectedDate})</h3>
+        {selectedTask ? (
+          <h3>일정 확인({selectedDate})</h3>
+        ) : (
+          <h3>일정 추가 ({selectedDate})</h3>
+        )}
+
         {/**일정 제목 */}
         <form onSubmit={handleSubmit} className="modal-form">
           <div className="modal-formGroup">
-            <label className="modal-label">일정</label>
+            {/* <label className="modal-label">일정</label> */}
             <input
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="일정을 입력해 주세요."
+              placeholder="할 일을 입력하세요."
               className="modal-input"
               required
             />
           </div>
           {/**상세 일정 */}
           <div className="modal-formGroup">
-            <label className="modal-label">상세 내용</label>
+            {/* <label className="modal-label">상세 내용</label> */}
             <textarea
               className="modal-textarea"
-              name=""
-              id=""
               value={contents}
               onChange={(e) => setContents(e.target.value)}
-              placeholder="상세 내용을 입력해 주세요."
+              placeholder="상세 내용을 입력하세요."
             ></textarea>
           </div>
           {/**이미지 */}

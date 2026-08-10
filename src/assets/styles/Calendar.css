@@ -3,3 +3,11 @@
   background-color: #fff;
   border-radius: 8px;
 }
+
+.todo-widget-container {
+  display: "flex";
+  flex-direction: "column";
+  height: "100%";
+  padding: "12px";
+  box-sizing: "border-box";
+}

@@ -45,15 +45,16 @@ export interface CommonWidgetProps {
 }
 
 export interface DashboardSharedProps {
-  widget: Widget[];
+  widgets: Widget[];
   setWidgets: setWidgetsType;
-  tasks?: TaskItem[]; // 👈 없어도 에러가 나지 않는 선택적 속성
-  setTasks?: Dispatch<SetStateAction<TaskItem[]>>; // 👈 선택적 속성
+  tasks?: TaskItem[];
+  setTasks?: Dispatch<SetStateAction<TaskItem[]>>;
 }
+
 export interface SidebarWidgetItem {
   type: string;
   label: string;
-  link?: string; // ⭐️ 이동할 경로 (선택적)
+  link?: string;
 }
 
 export interface TaskItem {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
 import type { Widget, TaskItem } from "./types/dashboard.ts";
@@ -19,25 +19,23 @@ function App() {
   const toggleSidebar = () => {
     setIsSidebarOpen((prev) => !prev);
   };
-
-  const [globalTasks, setGlobalTasks] = useState<TaskItem[]>([
-    //   {
-    //     id: "1",
-    //     content: "",
-    //     title: "AI 에이전트 설계 모듈 검증",
-    //     imageUrl: "",
-    //     dueDate: "2026-08-10",
-    //     status: "todo",
-    //   },
-    //   {
-    //     id: "2",
-    //     title: "팀 주간 회의",
-    //     content: "",
-    //     imageUrl: " ",
-    //     dueDate: "2026-08-14",
-    //     status: "todo",
-    //   },
-  ]);
+  /**2026.08.08. 로컬스토리지 작업 */
+  const [globalTasks, setGlobalTasks] = useState<TaskItem[]>(() => {
+    try {
+      const savedTask = localStorage.getItem("myDashboard_task");
+      return savedTask ? JSON.parse(savedTask) : [];
+    } catch (error) {
+      console.error("error:", error);
+      return [];
+    }
+  });
+  useEffect(() => {
+    try {
+      localStorage.setItem("myDashboard_task", JSON.stringify(globalTasks));
+    } catch (err) {
+      console.error("localStorage error", err);
+    }
+  });
 
   return (
     <div className="app-container">
@@ -50,7 +48,14 @@ function App() {
           <Routes>
             <Route
               path="/"
-              element={<GridBoard widgets={widgets} setWidgets={setWidgets} />}
+              element={
+                <GridBoard
+                  widgets={widgets}
+                  setWidgets={setWidgets}
+                  tasks={globalTasks}
+                  setTasks={setGlobalTasks}
+                />
+              }
             ></Route>
             <Route
               path="/calendar"
