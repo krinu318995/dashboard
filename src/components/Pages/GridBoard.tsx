@@ -1,9 +1,7 @@
 // src/components/GridBoard.tsx
-import React, { useRef } from "react";
+import { useRef, useState } from "react";
 import type {
-  SetStateAction,
   DragEvent,
-  Dispatch,
   MouseEvent as ReactMouseEvent,
   ChangeEvent,
 } from "react";
@@ -32,6 +30,31 @@ export const GridBoard = ({
 
   const GRID_COLUMNS = 12;
   const ROW_HEIGHT = 100; // 각 행의 높이 (px)
+
+  /////
+  type WidgetMode = "todos" | "dday" | "mini-calendar";
+  const [mode, setMode] = useState<Record<string, WidgetMode>>({});
+  const modes: WidgetMode[] = ["todos", "dday", "mini-calendar"];
+
+  const handlePrev = (widgetId: string) => {
+    setMode((prev) => {
+      const currentMode = prev[widgetId] || "todos";
+      const currentIdx = modes.indexOf(currentMode);
+      const prevIdx = (currentIdx - 1 + modes.length) % modes.length;
+      return { ...prev, [widgetId]: modes[prevIdx] };
+    });
+  };
+
+  const handleNext = (widgetId: string) => {
+    setMode((prev) => {
+      const currentMode = prev[widgetId] || "todos";
+      const currentIdx = modes.indexOf(currentMode);
+      const nextIdx = (currentIdx + 1) % modes.length;
+
+      return { ...prev, [widgetId]: modes[nextIdx] };
+    });
+  };
+  /////
 
   // const handleDragStart = (e: DragEvent, id: string) => {
   //   e.dataTransfer.setData("text/plain", id);
@@ -208,9 +231,9 @@ export const GridBoard = ({
           {/**HEADER */}
 
           <div className="widget-header">
-            {widget.type !== "memo" ? (
+            {widget.type !== "memo" && widget.type !== "todo" ? (
               <div className="widget-title">[{widget.title}]</div>
-            ) : (
+            ) : widget.type === "memo" ? (
               <input
                 type="text"
                 value={widget.title}
@@ -220,6 +243,33 @@ export const GridBoard = ({
                 onMouseDown={(e) => e.stopPropagation()}
                 className="widget-title widget-title-memo"
               />
+            ) : (
+              <div
+                className="widget-todo-header-left"
+                style={{ display: "flex", alignItems: "center", gap: "8px" }}
+              >
+                <button
+                  type="button"
+                  onClick={() => handlePrev(widget.id.toString())}
+                  className="nav-btn"
+                >
+                  &lt;
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleNext(widget.id.toString())}
+                  className="nav-btn"
+                >
+                  &gt;
+                </button>
+                <span className="widget-title" style={{ fontWeight: "bold" }}>
+                  {mode[widget.id] === "todos"
+                    ? "할 일"
+                    : mode[widget.id] === "dday"
+                      ? "D-Day"
+                      : "캘린더"}
+                </span>
+              </div>
             )}
             {/*삭제 버튼 추가 */}
             <button
@@ -248,14 +298,15 @@ export const GridBoard = ({
               setWidgets={setWidgets}
               tasks={tasks}
               setTasks={setTasks}
+              mode={mode[widget.id] || "todos"}
             ></TodosWidget>
           )}
           {widget.type === "memo" && (
             <MemoWidget widget={widget} setWidgets={setWidgets} />
           )}
-          <div className="widget-info">
+          {/* <div className="widget-info">
             위치: ({widget.x}, {widget.y}) | 크기: {widget.w}x{widget.h}
-          </div>
+          </div> */}
           <div
             className="widget-resize-handle"
             draggable={false}

@@ -1,5 +1,5 @@
-import { type DragEvent } from "react";
-import React, { useState } from "react";
+import { memo, type DragEvent } from "react";
+import { useState, useEffect } from "react";
 import type {
   Widget,
   setWidgetsType,
@@ -9,40 +9,39 @@ import { useNavigate } from "react-router-dom";
 interface SidebarProps {
   isOpen: boolean;
   setWidgets: setWidgetsType;
-  link?: string; // ⭐️ 라우팅 경로 (선택적 속성)
+  link?: string; //라우팅 경로,
+  widgets: Widget[];
 }
 
 const WIDGET_LIBRARY_ITEMS: SidebarWidgetItem[] = [
-  { type: "todo", label: "플래너", link: "/calendar" }, // 👈 link 존재 (클릭 시 이동)
-  { type: "weather", label: "날씨" }, // 👈 link 없음 (클릭 반응 없음)
-  { type: "clock", label: "시계" }, // 👈 link 없음
-  { type: "weather-clock", label: "날씨 / 시계" }, // 👈 link 없음
+  { type: "todo", label: "플래너", link: "/calendar" },
+  { type: "weather", label: "날씨" },
+  { type: "clock", label: "시계" },
+  { type: "weather-clock", label: "날씨 / 시계" },
 ];
 
-const dummyMemoRepository = [
-  {
-    memoId: "m1",
-    title: "7월 결산 및 회의록",
-    content: "AI 에이전트 설계 모듈 구조화 완료 및 보안 검증 진행 중...",
-  },
-  {
-    memoId: "m2",
-    title: "마트 장보기 목록",
-    content: "우유, 달걀, 닭가슴살, 대파 구입할 것",
-  },
-  {
-    memoId: "m3",
-    title: "학습 체크리스트",
-    content: "TypeScript 엄격 모드 다루기 및 React DND 최적화 공부",
-  },
-];
-
-export const Sidebar = ({ isOpen, setWidgets }: SidebarProps) => {
+export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
+  // const [memoList, setMemoList] = useState<Widget[]>([]);
   const [selectedMemoId, setSelectedMemoId] = useState<string>("");
+
+  const memoList = widgets.filter((w) => w.type === "memo");
+  // useEffect(() => {
+  //   try {
+  //     const savedMemo = localStorage.getItem("myDashboard_memo");
+  //     if (savedMemo) {
+  //       const paredMemos: Widget[] = JSON.parse(savedMemo);
+
+  //       const memosOnly = paredMemos.filter((m) => m.type === "memo");
+  //       setMemoList(memosOnly);
+  //     }
+  //   } catch (err) {
+  //     console.error(`메모 데이터 불러오기 오류 ${err}`);
+  //   }
+  // }, [isOpen]);
 
   const navigate = useNavigate();
   if (!isOpen) {
-    return null; // 사이드바가 닫혀있으면 아무것도 렌더링하지 않음
+    return null; //사이드바가 닫혀있으면 아무것도 렌더링하지 않음
   }
   /**일반 위젯 */
   const handleDragStart = (e: DragEvent, widgetType: string) => {
@@ -57,25 +56,24 @@ export const Sidebar = ({ isOpen, setWidgets }: SidebarProps) => {
   };
   /**메모 위젯 */
   const handleMemoDragStart = (e: DragEvent, memoId: string) => {
-    const targetMemo = dummyMemoRepository.find(
-      (m) => m.memoId === selectedMemoId,
-    );
+    const targetMemo = memoList.find((m) => m.id === memoId);
+
     if (targetMemo) {
       e.dataTransfer.setData("text/widget-type", "memo");
+
+      const memoPayload = {
+        title: targetMemo.title,
+        memoText: targetMemo.data?.memoText,
+        data: targetMemo.data?.imageUrl,
+      };
       e.dataTransfer.setData(
         "text/widget-memo-data",
-        JSON.stringify(targetMemo),
+        JSON.stringify(memoPayload),
       );
     }
   };
 
   const handleCreateNewMemo = () => {
-    const currentTime = new Date().toLocaleString("ko-KR", {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-    });
-
     const newEmptyMemo = {
       id: `memo-${Date.now()}`,
       type: "memo" as const,
@@ -83,7 +81,7 @@ export const Sidebar = ({ isOpen, setWidgets }: SidebarProps) => {
       y: 0,
       w: 4,
       h: 3,
-      title: `새 메모 ${currentTime}`,
+      title: "",
       data: { memoText: "" },
     };
 
@@ -104,18 +102,6 @@ export const Sidebar = ({ isOpen, setWidgets }: SidebarProps) => {
             >
               {item.label}
             </li>
-            // <li draggable onDragStart={(e) => handleDragStart(e, "weather")}>
-            //   날씨
-            // </li>
-            // <li draggable onDragStart={(e) => handleDragStart(e, "clock")}>
-            //   시계
-            // </li>
-            // <li
-            //   draggable
-            //   onDragStart={(e) => handleDragStart(e, "weather-clock")}
-            // >
-            //   날씨 / 시계
-            // </li>
           ))}
         </ul>
         <h4>메모</h4>
@@ -128,8 +114,8 @@ export const Sidebar = ({ isOpen, setWidgets }: SidebarProps) => {
             style={{ padding: "6px", borderRadius: "4px" }}
           >
             <option value="">새 메모 작성</option>
-            {dummyMemoRepository.map((m) => (
-              <option key={m.memoId} value={m.memoId}>
+            {memoList.map((m) => (
+              <option key={m.id} value={m.id}>
                 {m.title}
               </option>
             ))}
@@ -147,9 +133,6 @@ export const Sidebar = ({ isOpen, setWidgets }: SidebarProps) => {
             </div>
           )}
         </div>
-        {/* <ul style={{ listStyleType: 'none', padding: 0 }}>
-          <li draggable onDragStart={(e) => handleDragStart(e, 'memo')}>메모장</li>
-        </ul> */}
       </div>
     </aside>
   );

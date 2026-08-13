@@ -1,37 +1,37 @@
-import React, { useState, useEffect } from "react";
-import type {
-  Widget,
-  TaskItem,
-  DashboardSharedProps,
-} from "../../types/dashboard";
+// import React, { useState, useEffect } from "react";
+import type { DashboardSharedProps } from "../../types/dashboard";
 import "../../assets/styles/GridBoard.css";
 
 import Calendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
-type WidgetMode = "todos" | "dday" | "mini-calendar";
+
+interface TodosWidgetProps extends DashboardSharedProps {
+  mode: "todos" | "dday" | "mini-calendar";
+}
+// type WidgetMode = "todos" | "dday" | "mini-calendar";
 export const TodosWidget = ({
-  widgets,
   tasks = [],
   setTasks,
-}: DashboardSharedProps) => {
-  const [mode, setMode] = useState<WidgetMode>("todos");
-  const modes: WidgetMode[] = ["todos", "dday", "mini-calendar"];
+  mode,
+}: TodosWidgetProps) => {
+  // const [mode, setMode] = useState<WidgetMode>("todos");
+  // const modes: WidgetMode[] = ["todos", "dday", "mini-calendar"];
   const todayStr = new Date().toISOString().split("T")[0];
 
   const todayTasks = tasks?.filter((task) => task.dueDate === todayStr);
   const today = new Date(todayStr);
 
-  const handlePrev = () => {
-    const currentIdx = modes.indexOf(mode);
-    const prev = (currentIdx - 1 + modes.length) % modes.length;
-    setMode(modes[prev]);
-  };
+  // const handlePrev = () => {
+  //   const currentIdx = modes.indexOf(mode);
+  //   const prev = (currentIdx - 1 + modes.length) % modes.length;
+  //   setMode(modes[prev]);
+  // };
 
-  const handleNext = () => {
-    const currentIdx = modes.indexOf(mode);
-    const nextIdx = (currentIdx + 1) % modes.length;
-    setMode(modes[nextIdx]);
-  };
+  // const handleNext = () => {
+  //   const currentIdx = modes.indexOf(mode);
+  //   const nextIdx = (currentIdx + 1) % modes.length;
+  //   setMode(modes[nextIdx]);
+  // };
 
   const calDday = (objDay: string) => {
     const dDay = new Date(objDay);
@@ -46,6 +46,19 @@ export const TodosWidget = ({
     }
   };
 
+  // const getHeaderTitle = () => {
+  //   switch (mode) {
+  //     case "todos":
+  //       return "할 일";
+  //     case "dday":
+  //       return "D-Day";
+  //     case "mini-calendar":
+  //       return "캘린더";
+  //     default:
+  //       return "일정 관리";
+  //   }
+  // };
+
   const dDayTasks = tasks
     .filter((t) => {
       const taskDate = new Date(t.dueDate);
@@ -56,6 +69,7 @@ export const TodosWidget = ({
       (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
     )
     .slice(0, 4);
+
   const handleToggle = (taskId: String) => {
     if (!setTasks) {
       return;
@@ -70,20 +84,41 @@ export const TodosWidget = ({
           : task,
       ),
     );
-  }; //end
+  }; //end handleToggle
+
+  const handleDeleteTask = (taskId: string) => {
+    if (!setTasks) {
+      return;
+    }
+
+    if (!window.confirm("일정을 삭제하시겠습니까?")) {
+      return;
+    }
+    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+  };
 
   return (
     <div className="grid-widget-item">
       {/**헤더 */}
       <div className="widget-header">
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+        {/* <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button type="button" onClick={handlePrev}>
             &lt;
-          </button>{" "}
+          </button>
+          <h3
+            style={{
+              fontSize: "0.95rem",
+              fontWeight: "bold",
+              margin: 0,
+              flex: 1,
+            }}
+          >
+            {getHeaderTitle()}
+          </h3>
           <button type="button" onClick={handleNext}>
             &gt;
           </button>
-        </div>
+        </div> */}
         {mode !== "mini-calendar" ? <span>{todayStr}</span> : <span></span>}
       </div>
       {/** 리스트*/}
@@ -109,6 +144,13 @@ export const TodosWidget = ({
                       {t.title}
                     </span>
                   </label>
+                  {/**삭제 버튼 */}
+                  <button
+                    className="widget-delete-btn"
+                    onClick={() => handleDeleteTask(t.id)}
+                  >
+                    X
+                  </button>
                 </li>
               ))}
             </ul>
@@ -133,22 +175,23 @@ export const TodosWidget = ({
           ) : (
             <p></p>
           ))}
-        {mode === "mini-calendar" && (
-          <Calendar
-            plugins={[dayGridPlugin]}
-            initialView="dayGridMonth"
-            locale="ko"
-            headerToolbar={false}
-            height="auto"
-            events={tasks.map((t) => ({
-              id: t.id,
-              title: t.title,
-              date: t.dueDate,
-              status: t.status,
-            }))}
-          ></Calendar>
-        )}
       </div>
+      {mode === "mini-calendar" && (
+        <Calendar
+          plugins={[dayGridPlugin]}
+          initialView="dayGridMonth"
+          locale="ko"
+          headerToolbar={false}
+          height="auto"
+          events={tasks.map((t) => ({
+            id: t.id,
+            title: t.title,
+            date: t.dueDate,
+            status: t.status,
+          }))}
+        ></Calendar>
+      )}
+      {/** end "widget-list-container" */}
     </div>
   );
 };

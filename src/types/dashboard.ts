@@ -26,6 +26,7 @@ export interface Widget {
       status: taskStatus;
     }>;
     memoText?: string;
+    imageUrl?: string;
   };
 }
 
