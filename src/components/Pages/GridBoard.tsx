@@ -37,22 +37,52 @@ export const GridBoard = ({
   const modes: WidgetMode[] = ["todos", "dday", "mini-calendar"];
 
   const handlePrev = (widgetId: string) => {
-    setMode((prev) => {
-      const currentMode = prev[widgetId] || "todos";
-      const currentIdx = modes.indexOf(currentMode);
-      const prevIdx = (currentIdx - 1 + modes.length) % modes.length;
-      return { ...prev, [widgetId]: modes[prevIdx] };
-    });
+    // setMode((prev) => {
+    //   const currentMode = prev[widgetId] || "todos";
+    //   const currentIdx = modes.indexOf(currentMode);
+    //   const prevIdx = (currentIdx - 1 + modes.length) % modes.length;
+    //   return { ...prev, [widgetId]: modes[prevIdx] };
+    // });
+
+    setWidgets((prev) =>
+      prev.map((w) => {
+        if (w.id !== widgetId) {
+          return w;
+        }
+        const currentMode = w.mode || "todos";
+        const prevIdx =
+          (modes.indexOf(currentMode) - 1 + modes.length) % modes.length;
+
+        return {
+          ...w,
+          mode: modes[prevIdx],
+        };
+      }),
+    );
   };
 
   const handleNext = (widgetId: string) => {
-    setMode((prev) => {
-      const currentMode = prev[widgetId] || "todos";
-      const currentIdx = modes.indexOf(currentMode);
-      const nextIdx = (currentIdx + 1) % modes.length;
+    // setMode((prev) => {
+    //   const currentMode = prev[widgetId] || "todos";
+    //   const currentIdx = modes.indexOf(currentMode);
+    //   const nextIdx = (currentIdx + 1) % modes.length;
+    //   return { ...prev, [widgetId]: modes[nextIdx] };
+    // });
 
-      return { ...prev, [widgetId]: modes[nextIdx] };
-    });
+    setWidgets((prev) =>
+      prev.map((w) => {
+        if (String(w.id) !== widgetId) {
+          return w;
+        }
+        const currentMode = w.mode || "todos";
+        const nextIdx =
+          (modes.indexOf(currentMode) + 1 + modes.length) % modes.length;
+        return {
+          ...w,
+          mode: modes[nextIdx],
+        };
+      }),
+    );
   };
   /////
 
@@ -135,6 +165,7 @@ export const GridBoard = ({
         w: defaultW,
         h: defaultH,
         title: title,
+        mode: newWidgetType === "todo" ? "todos" : undefined,
         data: memoContent ? { memoText: memoContent } : undefined,
       };
 
@@ -229,61 +260,64 @@ export const GridBoard = ({
           }}
         >
           {/**HEADER */}
-
-          <div className="widget-header">
-            {widget.type !== "memo" && widget.type !== "todo" ? (
-              <div className="widget-title">[{widget.title}]</div>
-            ) : widget.type === "memo" ? (
-              <input
-                type="text"
-                value={widget.title}
-                onChange={(e) => handleTitleChange(e, widget.id)}
-                placeholder="제목을 입력하세요..."
-                // 입력 중 드래그 및 마우스 이벤트 충돌 방지
-                onMouseDown={(e) => e.stopPropagation()}
-                className="widget-title widget-title-memo"
-              />
-            ) : (
-              <div
-                className="widget-todo-header-left"
-                style={{ display: "flex", alignItems: "center", gap: "8px" }}
-              >
-                <button
-                  type="button"
-                  onClick={() => handlePrev(widget.id.toString())}
-                  className="nav-btn"
+          {(widget.type === "memo" || widget.type === "todo") && (
+            <div className="widget-header">
+              {widget.type === "memo" ? (
+                <input
+                  type="text"
+                  value={widget.title}
+                  onChange={(e) => handleTitleChange(e, widget.id)}
+                  placeholder="제목을 입력하세요..."
+                  // 입력 중 드래그 및 마우스 이벤트 충돌 방지
+                  onMouseDown={(e) => e.stopPropagation()}
+                  className="widget-title widget-title-memo"
+                />
+              ) : (
+                <div
+                  className="widget-todo-header-left"
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                  }}
                 >
-                  &lt;
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleNext(widget.id.toString())}
-                  className="nav-btn"
-                >
-                  &gt;
-                </button>
-                <span className="widget-title" style={{ fontWeight: "bold" }}>
-                  {mode[widget.id] === "todos"
-                    ? "할 일"
-                    : mode[widget.id] === "dday"
-                      ? "D-Day"
-                      : "캘린더"}
-                </span>
-              </div>
-            )}
-            {/*삭제 버튼 추가 */}
-            <button
-              className="widget-delete-btn"
-              onClick={(e) => {
-                e.stopPropagation();
-                setWidgets((prevWidgets: Widget[]) =>
-                  prevWidgets.filter((w) => w.id !== widget.id),
-                );
-              }}
-            >
-              ×
-            </button>
-          </div>
+                  <button
+                    type="button"
+                    onClick={() => handlePrev(widget.id.toString())}
+                    className="nav-btn"
+                  >
+                    &lt;
+                  </button>
+                  <span className="widget-title" style={{ fontWeight: "bold" }}>
+                    {widget.mode === "todos"
+                      ? "할 일"
+                      : widget.mode === "dday"
+                        ? "D-Day"
+                        : "캘린더"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleNext(widget.id.toString())}
+                    className="nav-btn"
+                  >
+                    &gt;
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          {/*삭제 버튼 추가 */}
+          <button
+            className="widget-delete-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              setWidgets((prevWidgets: Widget[]) =>
+                prevWidgets.filter((w) => w.id !== widget.id),
+              );
+            }}
+          >
+            ×
+          </button>
           {widget.type === "weather" && <WeatherWidget />}
           {widget.type === "clock" && <ClockWidgets />}
           {widget.type === "weather-clock" && <WeatherClockWidget />}
@@ -298,7 +332,7 @@ export const GridBoard = ({
               setWidgets={setWidgets}
               tasks={tasks}
               setTasks={setTasks}
-              mode={mode[widget.id] || "todos"}
+              mode={widget.mode || "todos"}
             ></TodosWidget>
           )}
           {widget.type === "memo" && (

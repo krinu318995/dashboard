@@ -1,5 +1,6 @@
 // src/types/dashboard.ts
 import type { Dispatch, SetStateAction } from "react";
+export type WidgetMode = "todos" | "dday" | "mini-calendar";
 export type taskStatus = "todo" | "in-progress" | "done";
 export type WidgetType =
   | "todo"
@@ -16,6 +17,7 @@ export interface Widget {
   w: number; // Grid 크기
   h: number;
   title: string; // 위젯 상단 타이틀
+  mode?: WidgetMode;
 
   // 위젯 내부에 들어갈 데이터 (일정, 메모 내용 등)
   data?: {
@@ -58,11 +60,25 @@ export interface SidebarWidgetItem {
   link?: string;
 }
 
+// export interface TaskItem {
+//   id: string;
+//   title: string;
+//   content: string;
+//   imageUrl?: string;
+//   startDate?: string;
+//   dueDate: string; // 예: "2026-08-04"
+//   isDday: boolean;
+//   status: taskStatus;
+// }
+
 export interface TaskItem {
   id: string;
   title: string;
   content: string;
   imageUrl?: string;
+  startDate?: string;
   dueDate: string; // 예: "2026-08-04"
+  isDday: boolean;
   status: taskStatus;
+  completedDates?: string[]; //반복 일정
 }

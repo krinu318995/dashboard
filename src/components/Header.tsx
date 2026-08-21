@@ -38,9 +38,6 @@ export const Header: React.FC<HeaderProps> = ({
           )}
         </nav>
       </div>
-      <div className="header-right">
-        <button className="add-widget-btn">+ Widget</button>
-      </div>
     </header>
   );
 };

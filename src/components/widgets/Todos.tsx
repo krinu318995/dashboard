@@ -1,9 +1,12 @@
 // import React, { useState, useEffect } from "react";
 import type { DashboardSharedProps } from "../../types/dashboard";
 import "../../assets/styles/GridBoard.css";
-
+import DatePicker from "react-datepicker";
 import Calendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
+import { format, parseISO } from "date-fns";
+import { ko } from "date-fns/locale";
+import { useState } from "react";
 
 interface TodosWidgetProps extends DashboardSharedProps {
   mode: "todos" | "dday" | "mini-calendar";
@@ -33,6 +36,20 @@ export const TodosWidget = ({
   //   setMode(modes[nextIdx]);
   // };
 
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+
+  const currentDateStr = format(selectedDate, "yyyy-MM-dd");
+
+  const currentTodos = tasks.filter((task) => {
+    if (task.isDday) {
+      return false;
+    }
+    if (task.startDate) {
+      return currentDateStr >= task.startDate && currentDateStr <= task.dueDate;
+    }
+    return task.dueDate === currentDateStr;
+  });
+
   const calDday = (objDay: string) => {
     const dDay = new Date(objDay);
 
@@ -46,19 +63,6 @@ export const TodosWidget = ({
     }
   };
 
-  // const getHeaderTitle = () => {
-  //   switch (mode) {
-  //     case "todos":
-  //       return "할 일";
-  //     case "dday":
-  //       return "D-Day";
-  //     case "mini-calendar":
-  //       return "캘린더";
-  //     default:
-  //       return "일정 관리";
-  //   }
-  // };
-
   const dDayTasks = tasks
     .filter((t) => {
       const taskDate = new Date(t.dueDate);
@@ -70,18 +74,34 @@ export const TodosWidget = ({
     )
     .slice(0, 4);
 
-  const handleToggle = (taskId: String) => {
+  const handleToggle = (taskId: string) => {
     if (!setTasks) {
       return;
     }
     setTasks((prev) =>
       prev.map((task) =>
-        task.id === taskId
-          ? {
-              ...task,
-              status: task.status === "done" ? "todo" : "done",
-            }
-          : task,
+        // task.id === taskId
+        //   ? {
+        //       ...task,
+        //       status: task.status === "done" ? "todo" : "done",
+        //     }
+        //   : task,
+
+        {
+          if (task.id !== taskId) {
+            return task;
+          }
+          const completed = task.completedDates || [];
+          const isAlreadyDone = completed.includes(currentDateStr);
+
+          const newCompletedDates = isAlreadyDone
+            ? completed.filter((d) => d !== currentDateStr)
+            : [...completed, currentDateStr];
+          return {
+            ...task,
+            completedDates: newCompletedDates,
+          };
+        },
       ),
     );
   }; //end handleToggle
@@ -119,40 +139,53 @@ export const TodosWidget = ({
             &gt;
           </button>
         </div> */}
+        {mode === "todos" && (
+          <div>
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date: Date | null) => date && setSelectedDate(date)}
+              dateFormat="yyyy-MM-dd"
+              locale={ko}
+            ></DatePicker>
+          </div>
+        )}
         {mode !== "mini-calendar" ? <span>{todayStr}</span> : <span></span>}
       </div>
       {/** 리스트*/}
       <div className="widget-list-container">
         {mode === "todos" &&
-          (todayTasks?.length !== 0 ? (
+          (currentTodos?.length !== 0 ? (
             <ul className="">
-              {todayTasks.map((t) => (
-                <li key={t.id}>
-                  <label htmlFor="">
-                    <input
-                      type="checkbox"
-                      checked={t.status === "done"}
-                      onChange={() => handleToggle(t.id)}
-                    />
-                    <span
-                      style={{
-                        textDecoration:
-                          t.status === "done" ? "line-through" : "none",
-                        color: t.status === "done" ? "#9ca3af" : "#1f2937",
-                      }}
+              {currentTodos.map((t) => {
+                const isDone =
+                  t.completedDates?.includes(currentDateStr) ?? false;
+                return (
+                  <li key={t.id}>
+                    <label htmlFor="">
+                      <input
+                        type="checkbox"
+                        checked={isDone}
+                        onChange={() => handleToggle(t.id)}
+                      />
+                      <span
+                        style={{
+                          textDecoration: isDone ? "line-through" : "none",
+                          color: isDone ? "#9ca3af" : "#1f2937",
+                        }}
+                      >
+                        {t.title}
+                      </span>
+                    </label>
+                    {/**삭제 버튼 */}
+                    <button
+                      className="widget-delete-todos-btn"
+                      onClick={() => handleDeleteTask(t.id)}
                     >
-                      {t.title}
-                    </span>
-                  </label>
-                  {/**삭제 버튼 */}
-                  <button
-                    className="widget-delete-btn"
-                    onClick={() => handleDeleteTask(t.id)}
-                  >
-                    X
-                  </button>
-                </li>
-              ))}
+                      X
+                    </button>
+                  </li>
+                );
+              })}
             </ul>
           ) : (
             <p>등록된 일정이 없습니다.</p>
@@ -173,7 +206,7 @@ export const TodosWidget = ({
               ))}
             </ul>
           ) : (
-            <p></p>
+            <p>등록된 일정이 없습니다.</p>
           ))}
       </div>
       {mode === "mini-calendar" && (

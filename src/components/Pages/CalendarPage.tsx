@@ -6,7 +6,8 @@ import interactionPlugin from "@fullcalendar/interaction";
 import type { TaskItem } from "../../types/dashboard.ts";
 import { TodoModal } from "../modals/TodoModal.tsx";
 import "../../assets/styles/Calendar.css";
-import type { EventClickArg } from "@fullcalendar/core";
+import type { EventClickArg, EventContentArg } from "@fullcalendar/core";
+import { addDays, format, parseISO } from "date-fns";
 interface CalendarPageProps {
   tasks: TaskItem[];
   setTasks: Dispatch<SetStateAction<TaskItem[]>>;
@@ -24,9 +25,19 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
   };
 
   const handleSaveTask = (newTask: TaskItem) => {
-    setTasks((prev) => [...prev, newTask]);
+    setTasks((prev) => {
+      const isExist = prev.some((t) => t.id === newTask.id);
+      if (isExist) {
+        return prev.map((t) => (t.id === newTask.id ? newTask : t));
+      } else {
+        return [...prev, newTask];
+      }
+    });
   };
 
+  const handleDeleteTask = (taskId: string) => {
+    setTasks((prev) => prev.filter((task) => task.id !== taskId));
+  };
   const addTask = (arg: { dateStr: string }) => {
     const taskTitle = prompt(`${arg.dateStr}에 추가할 일정을 입력하세요: `);
 
@@ -46,18 +57,36 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
       imageUrl: taskImage,
       dueDate: arg.dateStr,
       status: "todo",
+      isDday: false,
     };
 
     setTasks((prev) => [...prev, newTask]);
   }; //addTask
 
-  const calendarEvents = tasks.map((task) => ({
-    id: task.id,
-    title: task.title,
-    date: task.dueDate,
-    backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
-    borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
-  }));
+  const calendarEvents = tasks.map((task) => {
+    if (task.dueDate && task.startDate && task.dueDate >= task.startDate) {
+      const inclusiveEnd = format(
+        addDays(parseISO(task.startDate), 1),
+        "yyyy-MM-dd",
+      );
+      return {
+        id: task.id,
+        title: task.title,
+        start: inclusiveEnd,
+        end: task.dueDate,
+        backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+        borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+      };
+    } else {
+      return {
+        id: task.id,
+        title: task.title,
+        date: task.dueDate,
+        backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+        borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+      };
+    }
+  });
 
   const handleEventClick = (clickInfo: EventClickArg) => {
     const clickedTaskId = clickInfo.event.id;
@@ -71,6 +100,51 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
     }
   };
 
+  const handleRenderedEvent = (evt: EventContentArg) => {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          width: "100%",
+          padding: "2px 4px",
+          overflow: "hidden",
+        }}
+      >
+        <span
+          style={{
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
+          {evt.event.title}
+        </span>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteTask(evt.event.id);
+          }}
+          style={{
+            background: "transparent",
+            border: "none",
+            color: "#ffffff",
+            cursor: "pointer",
+            fontWeight: "bold",
+            fontSize: "12px",
+            marginLeft: "4px",
+            padding: "0 2px",
+            lineHeight: 1,
+          }}
+        >
+          ×
+        </button>
+      </div>
+    );
+  };
+
   return (
     <div>
       <h2>전체 일정 관리</h2>
@@ -81,6 +155,7 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
         events={calendarEvents}
         dateClick={handleDateClick}
         eventClick={handleEventClick}
+        eventContent={handleRenderedEvent}
       ></Calendar>
       <TodoModal
         isOpen={isModalOpen}
@@ -88,6 +163,7 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
         selectedTask={selectTask}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveTask}
+        onDelete={handleDeleteTask}
       ></TodoModal>
     </div>
   );

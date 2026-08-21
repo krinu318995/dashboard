@@ -66,3 +66,35 @@
   border-radius: 4px;
   cursor: pointer;
 }
+.modal-radio-group {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.modal-radio-label {
+  display: inline-flex;
+  align-items: center;
+  grid-area: 6px;
+}
+.custom-datepicker-input {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+/* 모달 레이어 뒤로 캘린더 팝오버가 가려지지 않도록 z-index 확보 */
+.react-datepicker-popper {
+  z-index: 9999 !important;
+}
+.modal-deleteBtn {
+  padding: 8px 16px;
+  background-color: #ff0616;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
