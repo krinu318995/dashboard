@@ -1,44 +1,45 @@
 // import React, { useState, useEffect } from "react";
 import type { DashboardSharedProps } from "../../types/dashboard";
 import "../../assets/styles/GridBoard.css";
+import "../../assets/styles/Todos.css";
 import DatePicker from "react-datepicker";
 import Calendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { ko } from "date-fns/locale";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 interface TodosWidgetProps extends DashboardSharedProps {
   mode: "todos" | "dday" | "mini-calendar";
 }
-// type WidgetMode = "todos" | "dday" | "mini-calendar";
 export const TodosWidget = ({
   tasks = [],
   setTasks,
   mode,
 }: TodosWidgetProps) => {
-  // const [mode, setMode] = useState<WidgetMode>("todos");
-  // const modes: WidgetMode[] = ["todos", "dday", "mini-calendar"];
   const todayStr = new Date().toISOString().split("T")[0];
 
-  const todayTasks = tasks?.filter((task) => task.dueDate === todayStr);
   const today = new Date(todayStr);
-
-  // const handlePrev = () => {
-  //   const currentIdx = modes.indexOf(mode);
-  //   const prev = (currentIdx - 1 + modes.length) % modes.length;
-  //   setMode(modes[prev]);
-  // };
-
-  // const handleNext = () => {
-  //   const currentIdx = modes.indexOf(mode);
-  //   const nextIdx = (currentIdx + 1) % modes.length;
-  //   setMode(modes[nextIdx]);
-  // };
 
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
 
   const currentDateStr = format(selectedDate, "yyyy-MM-dd");
+
+  const calendarRef = useRef<Calendar | null>(null);
+
+  const [calendarDate, setCalendarDate] = useState<Date>(new Date());
+
+  const handleCalendarDateChg = (date: Date | null) => {
+    if (!date) {
+      return;
+    }
+
+    setCalendarDate(date);
+    const calendarApi = calendarRef.current?.getApi();
+    if (calendarApi) {
+      calendarApi.gotoDate(date);
+    }
+  };
 
   const currentTodos = tasks.filter((task) => {
     if (task.isDday) {
@@ -67,7 +68,7 @@ export const TodosWidget = ({
     .filter((t) => {
       const taskDate = new Date(t.dueDate);
 
-      return taskDate >= today && t.status !== "done";
+      return t.isDday === true && taskDate >= today && t.status !== "done";
     })
     .sort(
       (a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime(),
@@ -79,30 +80,21 @@ export const TodosWidget = ({
       return;
     }
     setTasks((prev) =>
-      prev.map((task) =>
-        // task.id === taskId
-        //   ? {
-        //       ...task,
-        //       status: task.status === "done" ? "todo" : "done",
-        //     }
-        //   : task,
+      prev.map((task) => {
+        if (task.id !== taskId) {
+          return task;
+        }
+        const completed = task.completedDates || [];
+        const isAlreadyDone = completed.includes(currentDateStr);
 
-        {
-          if (task.id !== taskId) {
-            return task;
-          }
-          const completed = task.completedDates || [];
-          const isAlreadyDone = completed.includes(currentDateStr);
-
-          const newCompletedDates = isAlreadyDone
-            ? completed.filter((d) => d !== currentDateStr)
-            : [...completed, currentDateStr];
-          return {
-            ...task,
-            completedDates: newCompletedDates,
-          };
-        },
-      ),
+        const newCompletedDates = isAlreadyDone
+          ? completed.filter((d) => d !== currentDateStr)
+          : [...completed, currentDateStr];
+        return {
+          ...task,
+          completedDates: newCompletedDates,
+        };
+      }),
     );
   }; //end handleToggle
 
@@ -118,113 +110,159 @@ export const TodosWidget = ({
   };
 
   return (
-    <div className="grid-widget-item">
+    <div className="modern-todo-widget-container">
       {/**헤더 */}
-      <div className="widget-header">
-        {/* <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <button type="button" onClick={handlePrev}>
-            &lt;
-          </button>
-          <h3
-            style={{
-              fontSize: "0.95rem",
-              fontWeight: "bold",
-              margin: 0,
-              flex: 1,
-            }}
-          >
-            {getHeaderTitle()}
-          </h3>
-          <button type="button" onClick={handleNext}>
-            &gt;
-          </button>
-        </div> */}
-        {mode === "todos" && (
-          <div>
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date: Date | null) => date && setSelectedDate(date)}
-              dateFormat="yyyy-MM-dd"
-              locale={ko}
-            ></DatePicker>
+
+      {mode === "todos" && (
+        <div className="widget-content-wrap">
+          <div className="widget-top-bar">
+            <div className="calendar-icon-badge">
+              <span className="badge-day">{format(selectedDate, "d")}</span>
+            </div>
+            <h4 className="widget-main-title">
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date: Date | null) => date && setSelectedDate(date)}
+                dateFormat="M.dd eee"
+                locale={ko}
+                portalId="root-portal"
+                popperPlacement="bottom-start"
+                customInput={
+                  <button type="button" className="date-picker-trigger-btn">
+                    {format(selectedDate, "M.dd eee", { locale: ko })}
+                  </button>
+                }
+              />
+            </h4>
           </div>
-        )}
-        {mode !== "mini-calendar" ? <span>{todayStr}</span> : <span></span>}
-      </div>
-      {/** 리스트*/}
-      <div className="widget-list-container">
-        {mode === "todos" &&
-          (currentTodos?.length !== 0 ? (
-            <ul className="">
-              {currentTodos.map((t) => {
-                const isDone =
-                  t.completedDates?.includes(currentDateStr) ?? false;
-                return (
-                  <li key={t.id}>
-                    <label htmlFor="">
-                      <input
-                        type="checkbox"
-                        checked={isDone}
-                        onChange={() => handleToggle(t.id)}
-                      />
-                      <span
-                        style={{
-                          textDecoration: isDone ? "line-through" : "none",
-                          color: isDone ? "#9ca3af" : "#1f2937",
-                        }}
-                      >
-                        {t.title}
-                      </span>
-                    </label>
-                    {/**삭제 버튼 */}
-                    <button
-                      className="widget-delete-todos-btn"
-                      onClick={() => handleDeleteTask(t.id)}
+
+          <div className="todo-item-scroll-list">
+            {currentTodos?.length !== 0 ? (
+              <ul className="modern-todo-ul">
+                {currentTodos.map((t) => {
+                  const isDone =
+                    t.completedDates?.includes(currentDateStr) ?? false;
+                  return (
+                    <li
+                      key={t.id}
+                      className={`modern-todo-li ${isDone ? "is-done" : ""}`}
                     >
-                      X
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p>등록된 일정이 없습니다.</p>
-          ))}
-        {mode === "dday" &&
-          (dDayTasks.length !== 0 ? (
-            <ul>
-              {dDayTasks.map((t) => (
-                <li
-                  key={t.id}
-                  style={{ display: "flex", justifyContent: "space-between" }}
-                >
-                  <span>
-                    [{t.dueDate.substring(5)}]{t.title}
-                  </span>
-                  <span style={{ color: "#3b82f6" }}>{calDday(t.dueDate)}</span>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>등록된 일정이 없습니다.</p>
-          ))}
-      </div>
-      {mode === "mini-calendar" && (
-        <Calendar
-          plugins={[dayGridPlugin]}
-          initialView="dayGridMonth"
-          locale="ko"
-          headerToolbar={false}
-          height="auto"
-          events={tasks.map((t) => ({
-            id: t.id,
-            title: t.title,
-            date: t.dueDate,
-            status: t.status,
-          }))}
-        ></Calendar>
+                      <div className="checkbox-custom-label">
+                        <input
+                          type="checkbox"
+                          id={`checkbox-${t.id}`}
+                          checked={isDone}
+                          onChange={() => handleToggle(t.id)}
+                        />{" "}
+                        <label
+                          htmlFor={`checkbox-${t.id}`}
+                          className="custom-checkbox-box"
+                        ></label>
+                      </div>
+                      <div className="todo-text-group">
+                        <label
+                          htmlFor={`checkbox-${t.id}`}
+                          className="custom-title-text"
+                        >
+                          {t.title}
+                        </label>
+                        {t.dueDate && (
+                          <span className="todo-sub-date">
+                            {format(new Date(t.dueDate), "M.dd")}까지
+                          </span>
+                        )}
+                      </div>
+
+                      {/**삭제 버튼 */}
+                      <button
+                        className="widget-delete-todos-btn"
+                        onClick={() => handleDeleteTask(t.id)}
+                      >
+                        X
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="empty-state-text">등록된 일정이 없습니다.</p>
+            )}
+          </div>
+        </div>
       )}
-      {/** end "widget-list-container" */}
+      {mode === "dday" &&
+        (dDayTasks.length !== 0 ? (
+          <div className="widget-content-wrap">
+            <div className="dday-display-list">
+              {dDayTasks.map((t) => (
+                <div key={t.id} className="dday-single-item">
+                  <div className="dday-highlight-badge">
+                    {calDday(t.dueDate)}
+                  </div>
+                  <div className="dday-sub-info">
+                    <span className="dday-target-date">
+                      {t.dueDate.replace(/-/g, ".")}
+                    </span>
+                    <span className="dday-title-text">
+                      {t.title || "제목 없음"}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="empty-state-text">등록된 일정이 없습니다.</p>
+        ))}
+      {mode === "mini-calendar" && (
+        <div className="widget-content-wrap">
+          {" "}
+          <div className="widget-top-bar">
+            <div className="calendar-icon-badge">
+              <span className="badge-day">{format(calendarDate, "d")}</span>
+            </div>
+            <h4 className="widget-main-title">
+              <DatePicker
+                selected={calendarDate}
+                onChange={handleCalendarDateChg}
+                dateFormat="yyyy년 M월"
+                locale={ko}
+                portalId="root-portal"
+                popperPlacement="bottom-start"
+                customInput={
+                  <button type="button" className="date-picker-trigger-btn">
+                    {format(calendarDate, "yyyy년 M월", { locale: ko })}
+                  </button>
+                }
+              />
+            </h4>
+          </div>
+          <div
+            className="calendar-container-inner"
+            style={{ flex: 1, overflow: "hidden" }}
+          >
+            <Calendar
+              ref={calendarRef}
+              plugins={[dayGridPlugin]}
+              initialView="dayGridMonth"
+              initialDate={calendarDate}
+              dayCellContent={(arg) => arg.date.getDate()}
+              locale="ko"
+              headerToolbar={false}
+              // height="auto"
+              height="100%"
+              aspectRatio={1.1} // ⭐️ 가로/세로 비율을 컴팩트하게 압축
+              expandRows={true} // ⭐️ 남는 공간을 균등하게 채움s
+              events={tasks.map((t) => ({
+                id: t.id,
+                title: t.title,
+                date: t.dueDate,
+                status: t.status,
+              }))}
+            ></Calendar>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

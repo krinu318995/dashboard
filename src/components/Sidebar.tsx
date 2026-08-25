@@ -121,7 +121,7 @@ export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
             ))}
           </select>
           {selectedMemoId === "" && (
-            <button onClick={handleCreateNewMemo}>➕ 새 메모 작성</button>
+            <button onClick={handleCreateNewMemo}>새 메모 작성</button>
           )}
           {selectedMemoId !== "" && (
             <div
@@ -129,7 +129,7 @@ export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
               onDragStart={(e) => handleMemoDragStart(e, selectedMemoId)}
               className="sidebar-content-select-container-memo-drag"
             >
-              ✋ 선택한 메모를 대시보드로 드래그
+              선택한 메모를 대시보드로 드래그
             </div>
           )}
         </div>

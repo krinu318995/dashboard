@@ -284,7 +284,7 @@ export const GridBoard = ({
                   <button
                     type="button"
                     onClick={() => handlePrev(widget.id.toString())}
-                    className="nav-btn"
+                    className="widget-nav-btn"
                   >
                     &lt;
                   </button>
@@ -298,7 +298,7 @@ export const GridBoard = ({
                   <button
                     type="button"
                     onClick={() => handleNext(widget.id.toString())}
-                    className="nav-btn"
+                    className="widget-nav-btn"
                   >
                     &gt;
                   </button>

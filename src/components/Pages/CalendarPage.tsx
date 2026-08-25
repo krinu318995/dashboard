@@ -36,6 +36,9 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
   };
 
   const handleDeleteTask = (taskId: string) => {
+    if (!window.confirm("일정을 삭제하시겠습니까?")) {
+      return;
+    }
     setTasks((prev) => prev.filter((task) => task.id !== taskId));
   };
   const addTask = (arg: { dateStr: string }) => {
@@ -64,28 +67,57 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
   }; //addTask
 
   const calendarEvents = tasks.map((task) => {
-    if (task.dueDate && task.startDate && task.dueDate >= task.startDate) {
-      const inclusiveEnd = format(
-        addDays(parseISO(task.startDate), 1),
-        "yyyy-MM-dd",
-      );
+    const isDone = task.status === "done";
+    const themeColor = isDone ? "#9ca3af" : "#3b82f6";
+
+    const start = task.startDate || task.dueDate;
+    const end = task.dueDate;
+
+    if (start && end && start < end) {
+      const exclusiveEnd = format(addDays(parseISO(end), 1), "yyyy-MM-dd");
       return {
         id: task.id,
         title: task.title,
-        start: inclusiveEnd,
-        end: task.dueDate,
-        backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
-        borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
-      };
-    } else {
-      return {
-        id: task.id,
-        title: task.title,
-        date: task.dueDate,
-        backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
-        borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+        start: start,
+        end: exclusiveEnd,
+        allDay: true,
+        backgroundColor: themeColor,
+        borderColor: themeColor,
       };
     }
+    return {
+      id: task.id,
+      title: task.title,
+      start: start,
+      // end: exclusiveEnd,
+      allDay: true,
+      backgroundColor: themeColor,
+      borderColor: themeColor,
+    };
+    // if (task.dueDate && task.startDate && task.dueDate >= task.startDate) {
+    //   const inclusiveEnd = format(
+    //     addDays(parseISO(task.startDate), 1),
+    //     "yyyy-MM-dd",
+    //   );
+    //   return {
+    //     id: task.id,
+    //     title: task.title,
+    //     start: inclusiveEnd,
+    //     end: task.dueDate,
+    //     allDay: true,
+    //     backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+    //     borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+    //   };
+    // } else {
+    //   return {
+    //     id: task.id,
+    //     title: task.title,
+    //     date: task.dueDate,
+    //     allDay: true,
+    //     backgroundColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+    //     borderColor: task.status === "done" ? "#9ca3af" : "#3b82f6",
+    //   };
+    // }
   });
 
   const handleEventClick = (clickInfo: EventClickArg) => {
@@ -146,25 +178,41 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
   };
 
   return (
-    <div>
-      <h2>전체 일정 관리</h2>
-      <Calendar
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        locale="ko"
-        events={calendarEvents}
-        dateClick={handleDateClick}
-        eventClick={handleEventClick}
-        eventContent={handleRenderedEvent}
-      ></Calendar>
-      <TodoModal
-        isOpen={isModalOpen}
-        selectedDate={selectedDate}
-        selectedTask={selectTask}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveTask}
-        onDelete={handleDeleteTask}
-      ></TodoModal>
+    <div className="full-calendar-page-container">
+      {/* <div className="calendar-page-header">
+        <h2>전체 일정 관리</h2>
+      </div> */}
+      <div className="full-calendar-wrapper">
+        {" "}
+        <Calendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          locale="ko"
+          height="100%"
+          events={calendarEvents}
+          dateClick={handleDateClick}
+          eventClick={handleEventClick}
+          eventContent={handleRenderedEvent}
+          customButtons={{
+            pageTitle: {
+              text: "전체 일정 관리",
+            },
+          }}
+          headerToolbar={{
+            left: "pageTitle",
+            center: "title",
+            right: "today prev,next",
+          }}
+        ></Calendar>
+        <TodoModal
+          isOpen={isModalOpen}
+          selectedDate={selectedDate}
+          selectedTask={selectTask}
+          onClose={() => setIsModalOpen(false)}
+          onSave={handleSaveTask}
+          onDelete={handleDeleteTask}
+        ></TodoModal>
+      </div>
     </div>
   );
 }; //CalendarPage

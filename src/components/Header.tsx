@@ -1,5 +1,6 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
+import "../assets/styles/Layout.css";
 interface HeaderProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;
@@ -20,7 +21,7 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <header className="dashboard-header">
       <div className="header-left">
-        <button className="toggle-btn" onClick={toggleSidebar}>
+        <button className="sidebar-toggle-btn" onClick={toggleSidebar}>
           {isSidebarOpen ? "◀" : "▶"}
         </button>
         <nav className="breadcrumb">

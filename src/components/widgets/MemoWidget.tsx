@@ -143,7 +143,7 @@ export const MemoWidget = ({ widget, setWidgets }: CommonWidgetProps) => {
           onClick={() => setIsFooterOpen((prev) => !prev)}
           onMouseDown={(e) => e.stopPropagation()}
         >
-          {isFooterOpen ? "접기 ▲" : "열기 ▼"}
+          {isFooterOpen ? "접기 ▼" : "열기 ▲"}
         </button>
         {isFooterOpen && (
           <div className="memo-widget-footer">
