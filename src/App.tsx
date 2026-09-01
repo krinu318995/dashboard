@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Header } from "./components/Header";
 import { Sidebar } from "./components/Sidebar";
-import type { Widget, TaskItem } from "./types/dashboard.ts";
+import type { Widget, TaskItem, MemoItem } from "./types/dashboard.ts";
 import { GridBoard } from "./components/Pages/GridBoard.tsx";
 import { CalendarPage } from "./components/Pages/CalendarPage.tsx";
 import "./App.css";
@@ -12,10 +12,10 @@ function App() {
 
   const [widgets, setWidgets] = useState<Widget[]>(() => {
     try {
-      const savedWidget = localStorage.getItem("myDashboard_memo");
+      const savedWidget = localStorage.getItem("myDashboard_widgets");
       return savedWidget ? JSON.parse(savedWidget) : [];
     } catch (err) {
-      console.error(err, " memo get error");
+      console.error(err, " widget get error");
     }
   });
 
@@ -32,6 +32,24 @@ function App() {
       return [];
     }
   });
+
+  const [memos, setMemos] = useState<MemoItem[]>(() => {
+    try {
+      const savedMemo = localStorage.getItem("myDashboard_memo");
+      return savedMemo ? JSON.parse(savedMemo) : [];
+    } catch (err) {
+      console.error(err, " memo get error");
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    try {
+      localStorage.setItem("myDashboard_widgets", JSON.stringify(widgets));
+    } catch (err) {
+      console.error(err, " errer");
+    }
+  }, [widgets]);
   /**task 저장 */
   useEffect(() => {
     try {
@@ -44,11 +62,11 @@ function App() {
   /**메모 저장 */
   useEffect(() => {
     try {
-      localStorage.setItem("myDashboard_memo", JSON.stringify(widgets));
+      localStorage.setItem("myDashboard_memo", JSON.stringify(memos));
     } catch (err) {
       console.error(err, " memo error");
     }
-  }, [widgets]);
+  }, [memos]);
 
   // useEffect(() => []);
   return (
@@ -72,6 +90,8 @@ function App() {
                   setWidgets={setWidgets}
                   tasks={globalTasks}
                   setTasks={setGlobalTasks}
+                  memos={memos}
+                  setMemos={setMemos}
                 />
               }
             ></Route>

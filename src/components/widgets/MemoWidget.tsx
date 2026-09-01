@@ -1,43 +1,77 @@
-import react, { useState, useEffect } from "react";
+import react, { useState, useEffect, useRef, memo } from "react";
 import "../../assets/styles/Memo.css";
 
-import type { CommonWidgetProps } from "../../types/dashboard.ts";
+import type { MemoViewMode, MemoWidgetProps } from "../../types/dashboard.ts";
 import type { ChangeEvent, ClipboardEvent } from "react";
-
-export const MemoWidget = ({ widget, setWidgets }: CommonWidgetProps) => {
+export const MemoWidget = ({
+  widget,
+  setWidgets,
+  memos,
+  setMemos,
+}: MemoWidgetProps) => {
   const [isFooterOpen, setIsFooterOpen] = useState<boolean>(false);
+  const currentMode: MemoViewMode = widget.viewMode || "normal";
+  // const titleInputRef = useRef<HTMLInputElement | null>(null);
+  // const [isEditing, setIsEditing] = useState(false);
+
+  const handleModeChange = (mode: MemoViewMode) => {
+    setWidgets((prev) =>
+      prev.map((w) => (w.id === widget.id ? { ...w, viewMode: mode } : w)),
+    );
+  };
 
   const handleTextChange = (
     e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-    field: "title" | "memoText",
+    // field: "title" | "memoText",
   ) => {
     const newText = e.target.value;
-    const newTitle = e.target.value;
-
+    const memoId = widget.data?.memo?.id || `memo_${crypto.randomUUID()}`;
+    const now = widget.data?.memo?.createdAt || Date.now();
     setWidgets((prevWidgets) =>
-      // prevWidgets.map((w) =>
-      //   w.id === widget.id
-      //     ? {
-      //         ...w,
-      //         data: {
-      //           ...w.data,
-      //           memoText: newText,
-      //         },
-      //       }
-      //     : w,
-      // ), //prevWidgets.map
-
-      prevWidgets.map((w) =>
-        w.id !== widget.id
-          ? w
-          : field === "title"
-            ? {
-                ...w,
-                title: newTitle,
-              }
-            : { ...w, data: { ...w.data, memoText: newText } },
-      ),
+      prevWidgets.map((w) => {
+        if (String(w.id) === String(widget.id)) {
+          return {
+            ...w,
+            data: {
+              ...w.data,
+              memo: {
+                id: memoId,
+                title: w.data?.memo?.title,
+                memoText: newText,
+                imageUrl: w.data?.memo?.imageUrl,
+                createdAt: now,
+                updatedAt: Date.now(),
+              },
+            },
+          };
+        }
+        return w;
+      }),
     ); //setWidgets
+
+    if (setMemos) {
+      setMemos((prevMemos) => {
+        const exists = prevMemos.some((m) => m.id === memoId);
+
+        if (exists) {
+          return prevMemos.map((m) =>
+            m.id === memoId
+              ? { ...m, memoText: newText, updatedAt: Date.now() }
+              : m,
+          );
+        }
+        return [
+          ...prevMemos,
+          {
+            id: memoId,
+            title: widget.data?.memo?.title,
+            memoText: newText,
+            imageUrl: widget.data?.memo?.imageUrl,
+            createdAt: now,
+          },
+        ];
+      });
+    }
   }; //handleTextChange
 
   const handleImageUpload = (e: ChangeEvent<HTMLInputElement>) => {
@@ -50,27 +84,83 @@ export const MemoWidget = ({ widget, setWidgets }: CommonWidgetProps) => {
 
     reader.onloadend = () => {
       const base64Str = reader.result as string;
-
+      const memoId = widget.data?.memo?.id || `memo_${crypto.randomUUID()}`;
       setWidgets((prev) =>
         prev.map((w) =>
-          w.id === widget.id ? { ...w, data: { imageUrl: base64Str } } : w,
+          String(w.id) === String(widget.id)
+            ? {
+                ...w,
+                data: {
+                  ...w.data,
+                  memo: {
+                    ...(w.data?.memo || {
+                      id: memoId,
+                      createdAt: Date.now(),
+                      memoText: "",
+                    }),
+                    imageUrl: base64Str,
+                    updatedAt: Date.now(),
+                  },
+                },
+              }
+            : w,
         ),
-      );
+      ); // end setWidgets
+      if (setMemos) {
+        setMemos((prev) =>
+          prev.map((m) =>
+            m.id === memoId
+              ? {
+                  ...m,
+                  imageUrl: base64Str,
+                  updatedAt: Date.now(),
+                }
+              : m,
+          ),
+        );
+      }
     };
     reader.readAsDataURL(file);
   }; // end handleImageUpload
 
   const handleDeleteImg = () => {
+    const memoId = widget.data?.memo?.id;
     setWidgets((prev) =>
       prev.map((w) =>
-        w.id === widget.id
-          ? { ...w, data: { ...w.data, imageUrl: undefined } }
+        w.id === widget.id && w.data?.memo
+          ? {
+              ...w,
+              data: {
+                ...w.data,
+                memo: {
+                  ...w.data.memo,
+                  imageUrl: undefined,
+                  updatedAt: Date.now(),
+                },
+              },
+            }
           : w,
       ),
-    );
+    ); // end setWidgets
+
+    if (setMemos && memoId) {
+      setMemos((prev) =>
+        prev.map((m) =>
+          m.id === memoId
+            ? {
+                ...m,
+                imageUrl: undefined,
+                updatedAt: Date.now(),
+              }
+            : m,
+        ),
+      );
+    }
   }; // end handleDeleteImg
 
-  const handlePaste = (e: ClipboardEvent<HTMLInputElement>) => {
+  const handlePaste = (
+    e: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     const items = e.clipboardData?.items;
     if (!items) {
       return;
@@ -86,34 +176,86 @@ export const MemoWidget = ({ widget, setWidgets }: CommonWidgetProps) => {
         e.preventDefault(); //text area 에 파일 명이 들어가는 것 방지
 
         const reader = new FileReader();
+
         reader.onloadend = () => {
           const base64Str = reader.result as string;
+          const memoId = widget.data?.memo?.id || `memo_${crypto.randomUUID()}`;
 
+          const now = widget.data?.memo?.createdAt || Date.now();
           setWidgets((prev) =>
             prev.map((w) =>
-              w.id === widget.id
+              String(w.id) === String(widget.id)
                 ? {
                     ...w,
                     data: {
-                      ...w,
-                      imageUrl: base64Str,
+                      ...w.data,
+                      memo: {
+                        ...(w.data?.memo || {
+                          id: memoId,
+                          createdAt: Date.now(),
+                          memoText: w.data?.memo?.memoText || "",
+                        }),
+                        imageUrl: base64Str,
+                        updatedAt: Date.now(),
+                      },
                     },
                   }
                 : w,
             ),
           ); // end setWidgets
-        };
+
+          if (setMemos) {
+            setMemos((prev) => {
+              const exists = prev.some((m) => m.id === memoId);
+
+              if (exists) {
+                return prev.map((m) =>
+                  m.id === memoId
+                    ? {
+                        ...m,
+                        imageUrl: base64Str,
+                        updatedAt: Date.now(),
+                      }
+                    : m,
+                );
+              }
+              return [
+                ...prev,
+                {
+                  id: memoId,
+                  title: widget.data?.memo?.title || "",
+                  memoText: widget.data?.memo?.memoText || "",
+                  imageUrl: base64Str,
+                  createdAt: now,
+                  updatedAt: Date.now(),
+                },
+              ];
+            }); //setMemos
+          }
+          // return [
+          //   ...prev,
+          //   {
+          //     id: memoId,
+          //     title: widget.data?.memo?.title || "",
+          //     memoText: widget.data?.memo?.memoText || "",
+          //     imageUrl: base64Str,
+          //     createdAt: now,
+          //     updatedAt: Date.now(),
+          //   },
+          // ];
+        }; //end onloadend
+
         reader.readAsDataURL(file);
         break;
       }
-    }
-  };
+    } //end for
+  }; //end handlePaste
   return (
     <div className="memo-widget-container">
       {/**이미지 영역 */}
-      {widget.data?.imageUrl && (
+      {widget.data?.memo?.imageUrl && (
         <div className="memo-img-wrapper">
-          <img src={widget.data.imageUrl} className="memo-img-image" />
+          <img src={widget.data.memo.imageUrl} className="memo-img-image" />
           <button className="memo-img-del-btn" onClick={handleDeleteImg}>
             X
           </button>
@@ -122,8 +264,8 @@ export const MemoWidget = ({ widget, setWidgets }: CommonWidgetProps) => {
       <textarea
         name=""
         id=""
-        value={widget.data?.memoText || ""}
-        onChange={(e) => handleTextChange(e, "memoText")}
+        value={widget.data?.memo?.memoText || ""}
+        onChange={(e) => handleTextChange(e)}
         placeholder="메모를 입력하세요"
         onMouseDown={(e) => e.stopPropagation()} //그리드보드에서 드래그 이벤트가 발생하지 않도록 방지
         onDragStart={
@@ -161,6 +303,32 @@ export const MemoWidget = ({ widget, setWidgets }: CommonWidgetProps) => {
               onChange={handleImageUpload}
               style={{ display: "none" }}
             />
+            {/**토글 */}
+            <div
+              className="memo-view-mode-group"
+              style={{ display: "flex", gap: "8px", fontSize: "12px" }}
+            >
+              <label>
+                <input
+                  type="radio"
+                  name={`view-mode-${widget.id}`}
+                  value="normal"
+                  checked={currentMode === "normal"}
+                  onChange={() => handleModeChange("normal")}
+                />
+                일반
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name={`view-mode-${widget.id}`}
+                  value="minimal-frame"
+                  checked={currentMode === "minimal-frame"}
+                  onChange={() => handleModeChange("minimal-frame")}
+                />{" "}
+                액자
+              </label>
+            </div>
           </div>
         )}
       </div>

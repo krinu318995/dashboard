@@ -2,6 +2,7 @@
 import type { Dispatch, SetStateAction } from "react";
 export type WidgetMode = "todos" | "dday" | "mini-calendar";
 export type taskStatus = "todo" | "in-progress" | "done";
+export type MemoViewMode = "normal" | "minimal-frame";
 export type WidgetType =
   | "todo"
   | "clock"
@@ -16,8 +17,9 @@ export interface Widget {
   y: number;
   w: number; // Grid 크기
   h: number;
-  title: string; // 위젯 상단 타이틀
+  // title: string; // 위젯 상단 타이틀
   mode?: WidgetMode;
+  viewMode?: MemoViewMode;
 
   // 위젯 내부에 들어갈 데이터 (일정, 메모 내용 등)
   data?: {
@@ -27,8 +29,8 @@ export interface Widget {
       dueDate: string; // 계획일 (DND로 수정될 대상!)
       status: taskStatus;
     }>;
-    memoText?: string;
-    imageUrl?: string;
+
+    memo?: MemoItem;
   };
 }
 
@@ -39,37 +41,11 @@ export interface WeatherData {
   city: string;
   humidity: string;
 }
-
-export type setWidgetsType = Dispatch<SetStateAction<Widget[]>>;
-
-export interface CommonWidgetProps {
-  widget: Widget;
-  setWidgets: setWidgetsType;
-}
-
-export interface DashboardSharedProps {
-  widgets: Widget[];
-  setWidgets: setWidgetsType;
-  tasks?: TaskItem[];
-  setTasks?: Dispatch<SetStateAction<TaskItem[]>>;
-}
-
 export interface SidebarWidgetItem {
   type: string;
   label: string;
   link?: string;
 }
-
-// export interface TaskItem {
-//   id: string;
-//   title: string;
-//   content: string;
-//   imageUrl?: string;
-//   startDate?: string;
-//   dueDate: string; // 예: "2026-08-04"
-//   isDday: boolean;
-//   status: taskStatus;
-// }
 
 export interface TaskItem {
   id: string;
@@ -81,4 +57,41 @@ export interface TaskItem {
   isDday: boolean;
   status: taskStatus;
   completedDates?: string[]; //반복 일정
+}
+
+export interface MemoItem {
+  id: string; // 고유 메모 ID (위젯 생성 시 매핑)
+  title?: string; // 메모 제목
+  memoText: string; // 메모 본문 내용
+  imageUrl?: string; // 첨부 이미지 base64 (선택적)
+  createdAt: number; // 생성 일시 (타임스탬프)
+  updatedAt?: number; // 수정 일시 (타임스탬프)
+  isArchived?: boolean; // 보관/숨김 여부 (메모 관리 페이지 활용)
+}
+
+export type setWidgetsType = Dispatch<SetStateAction<Widget[]>>;
+
+export interface MemoStateProps {
+  memos?: MemoItem[];
+  setMemos?: React.Dispatch<React.SetStateAction<MemoItem[]>>;
+}
+
+export interface TaskStateProps {
+  tasks: TaskItem[];
+  setTasks: React.Dispatch<React.SetStateAction<TaskItem[]>>;
+}
+
+export interface BaseWidgetProps {
+  widget: Widget;
+  setWidgets: React.Dispatch<React.SetStateAction<Widget[]>>;
+}
+export interface MemoWidgetProps extends BaseWidgetProps, MemoStateProps {}
+
+export interface TodoWidgetProps extends BaseWidgetProps, TaskStateProps {
+  mode: WidgetMode;
+}
+
+export interface DashboardSharedProps extends MemoStateProps, TaskStateProps {
+  widgets: Widget[];
+  setWidgets: React.Dispatch<React.SetStateAction<Widget[]>>;
 }

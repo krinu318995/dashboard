@@ -3,20 +3,21 @@
 .memo-widget-container {
   width: 100%;
   height: 100%;
-  padding: 6px;
+  padding: 8px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   gap: 4px;
   background: transparent;
-  overflow: hidden; /* 영역 이탈 방지 */
+  overflow: hidden;
+  position: relative; /* 자식 absolute 기준점 */
 }
 
 /* 텍스트 입력 영역 */
 .memo-widget-textarea {
   width: 100%;
-  flex: 1; /* 남는 세로 공간을 꽉 채움 */
-  min-height: 40px; /* 최소 높이 보장 */
+  flex: 1;
+  min-height: 40px;
   border: none;
   resize: none;
   outline: none;
@@ -27,16 +28,17 @@
   font-family: inherit;
   box-sizing: border-box;
   padding: 0;
+  padding-bottom: 34px; /* 하단 탭과 겹치지 않게 여백 */
 }
 
 /* 이미지 영역 */
 .memo-img-wrapper {
   position: relative;
-  min-height: 80px; /* 위젯이 작을 때를 고려해 높이 축소 */
-  max-height: 80%;
+  min-height: 80px;
+  max-height: 100%;
   overflow: hidden;
   border-radius: 4px;
-  flex-shrink: 0; /* 이미지 때문에 푸터가 밀리지 않도록 고정 */
+  flex-shrink: 0;
   resize: vertical;
 }
 
@@ -63,58 +65,101 @@
   justify-content: center;
 }
 
-.memo-widget-footer {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding-top: 4px;
-  border-top: 1px dashed #e5e7eb;
-  flex-shrink: 0; /* ⭐️ 높이가 줄어들어도 푸터가 절대 사라지지 않게 보호 */
-  height: 30px;
+/* =========================================================
+   ⭐️ 견출지 인덱스 탭 푸터 (우측 하단 고정)
+   ========================================================= */
+
+/* 1. 푸터 래퍼: 위젯 우측 하단에서 8px 띄워 우측 정렬 */
+.memo-widget-footer-container {
+  position: absolute !important;
+  bottom: 8px !important;
+  right: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: flex-end !important; /* 항상 우측 정렬 */
+  z-index: 30;
 }
 
+/* 2. 열기/접기 버튼 (평상시: 열기 ▲) */
+.memo-folder-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 11px;
+  padding: 3px 8px;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  box-sizing: border-box;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
+}
+
+.memo-folder-tab:hover {
+  background-color: #e2e8f0;
+  color: #111827;
+}
+
+/* 3. 열렸을 때 (접기 ▼): 메뉴 박스 상단에 견출지로 일체화 */
+.memo-folder-tab.open {
+  background-color: #ffffff;
+  color: #2563eb;
+  border: 1px solid #cbd5e1;
+  border-bottom: 1px solid #ffffff; /* 아래 테두리 제거 */
+  border-radius: 5px 5px 0 0;
+  margin-bottom: -1px; /* 1px 겹침 */
+  position: relative;
+  z-index: 40;
+}
+
+/* 4. 열린 설정 메뉴 박스 */
+.memo-widget-footer {
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px 0 6px 6px; /* 우측 상단만 직각 */
+  padding: 6px 10px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+  z-index: 35;
+  box-sizing: border-box;
+}
+
+/* 라벨 및 라디오 버튼 */
 .memo-widget-label {
   font-size: 11px;
-  color: #6b7280;
+  color: #374151;
   cursor: pointer;
   padding: 2px 6px;
   border: 1px solid #d1d5db;
-  border-radius: 4px;
-  background-color: #f9fafb;
+  border-radius: 3px;
+  background-color: #f8fafc;
   display: inline-block;
   user-select: none;
 }
 
 .memo-widget-label:hover {
-  background-color: #f3f4f6;
+  background-color: #f1f5f9;
 }
-.memo-widget-footer-container {
+
+.memo-view-mode-group {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end; /* 우측 정렬 */
-  flex-shrink: 0;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #334155;
 }
 
-.memo-folder-tab {
-  background-color: #e5e7eb;
-  color: #848c97;
-  border: 1px solid #d1d5db;
-  border-bottom: none; /* 하단 테두리를 제거해 연결된 느낌 구현 */
-  border-radius: 6px 6px 0 0; /* 상단만 둥글게 */
-  font-size: 10px;
-  padding: 2px 8px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.memo-folder-tab:hover {
-  background-color: #d1d5db;
-  color: #111827;
-}
-
-.memo-folder-tab.open {
-  background-color: #f3f4f6;
-  color: #2563eb; /* 열려있을 때 파란색 포인트 */
-  border-color: #cbd5e1;
+.memo-view-mode-group label {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
 }
