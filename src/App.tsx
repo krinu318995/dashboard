@@ -4,6 +4,7 @@ import { Sidebar } from "./components/Sidebar";
 import type { Widget, TaskItem, MemoItem } from "./types/dashboard.ts";
 import { GridBoard } from "./components/Pages/GridBoard.tsx";
 import { CalendarPage } from "./components/Pages/CalendarPage.tsx";
+import { MemoManagementPage } from "./components/Pages/MemoManagementPage.tsx";
 import "./App.css";
 import "./assets/styles/Layout.css";
 import { Routes, Route } from "react-router-dom";
@@ -15,7 +16,7 @@ function App() {
       const savedWidget = localStorage.getItem("myDashboard_widgets");
       return savedWidget ? JSON.parse(savedWidget) : [];
     } catch (err) {
-      console.error(err, " widget get error");
+      console.error(err, " widget date get error");
     }
   });
 
@@ -77,6 +78,7 @@ function App() {
           isOpen={isSidebarOpen}
           setWidgets={setWidgets}
           widgets={widgets}
+          memos={memos}
         />
 
         <main className="grid-container-wrapper">
@@ -99,6 +101,17 @@ function App() {
               path="/calendar"
               element={
                 <CalendarPage tasks={globalTasks} setTasks={setGlobalTasks} />
+              }
+            ></Route>{" "}
+            <Route
+              path="/memos"
+              element={
+                <MemoManagementPage
+                  widgets={widgets}
+                  setWidgets={setWidgets}
+                  memos={memos}
+                  setMemos={setMemos}
+                />
               }
             ></Route>
             {/**그리드보드가 위젯 정보를 갖고 있으므로 캘린더는 위젯 관련 정보를 넘겨받을 필요 없이 task info 만 갖고 있으면 됨*/}

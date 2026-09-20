@@ -28,3 +28,4 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+src/components/Pages/GridBoard copy.tsx

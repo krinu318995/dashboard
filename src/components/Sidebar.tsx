@@ -1,16 +1,21 @@
 import { memo, type DragEvent } from "react";
 import { useState, useEffect } from "react";
-import type {
-  Widget,
-  setWidgetsType,
-  SidebarWidgetItem,
+import {
+  DEFAULT_SIZES,
+  type Widget,
+  type setWidgetsType,
+  type SidebarWidgetItem,
+  type MemoStateProps,
+  type MemoItem,
+  DEFAULT_POSITION,
 } from "../types/dashboard.ts";
 import { useNavigate } from "react-router-dom";
-interface SidebarProps {
+interface SidebarProps extends MemoStateProps {
   isOpen: boolean;
   setWidgets: setWidgetsType;
   link?: string; //라우팅 경로,
   widgets: Widget[];
+  memos: MemoItem[];
 }
 
 const WIDGET_LIBRARY_ITEMS: SidebarWidgetItem[] = [
@@ -18,27 +23,48 @@ const WIDGET_LIBRARY_ITEMS: SidebarWidgetItem[] = [
   { type: "weather", label: "날씨" },
   { type: "clock", label: "시계" },
   { type: "weather-clock", label: "날씨 / 시계" },
+  { type: "memo-manager", label: "메모 리스트", link: "/memos" },
 ];
 
-export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
+export const Sidebar = ({
+  isOpen,
+  setWidgets,
+  widgets,
+  memos,
+}: SidebarProps) => {
   // const [memoList, setMemoList] = useState<Widget[]>([]);
   const [selectedMemoId, setSelectedMemoId] = useState<string>("");
+  const [selectedMemo, setSelectedMemo] = useState<string>("");
+  // const activeMemoWidgets = (widgets ?? []).filter((w) => w.type === "memo");
 
-  const memoList = widgets.filter((w) => w.type === "memo");
-  // useEffect(() => {
-  //   try {
-  //     const savedMemo = localStorage.getItem("myDashboard_memo");
-  //     if (savedMemo) {
-  //       const paredMemos: Widget[] = JSON.parse(savedMemo);
+  const memoList = (memos ?? [])
+    .map((m) => {
+      // const memoId = m.data?.memo?.id;
+      // const matchedMemo = (memos ?? []).find((memo) => memo.id === memoId);
+      // const memoData = matchedMemo || m.data?.memo;
 
-  //       const memosOnly = paredMemos.filter((m) => m.type === "memo");
-  //       setMemoList(memosOnly);
-  //     }
-  //   } catch (err) {
-  //     console.error(`메모 데이터 불러오기 오류 ${err}`);
-  //   }
-  // }, [isOpen]);
+      const memoId = m.id;
+      const matchedMemo = (memos ?? []).find((memo) => memo.id === memoId);
+      // const memoData = matchedMemo || m.data?.memo;
+      console.log("확인", matchedMemo);
+      // console.log("memoId: ", memoId);
+      // console.log("m.id:", m.id);
+      // console.log("m.matchedMemo:", matchedMemo);
+      // console.log("memoData:", memoData);
+      // if (!memoData) {
+      //   return; // 메모 데이터가 없는 경우 null 반환
+      // }
 
+      return {
+        widgetId: m.id,
+        // type: m.type,
+        // ...memoData,
+        ...m,
+      };
+    })
+    .filter((item): item is NonNullable<typeof item> => item !== null);
+  console.log("memoList: ", memoList);
+  console.log("selectedMemoId: ", selectedMemoId);
   const navigate = useNavigate();
   if (!isOpen) {
     return null; //사이드바가 닫혀있으면 아무것도 렌더링하지 않음
@@ -55,16 +81,19 @@ export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
     }
   };
   /**메모 위젯 */
-  const handleMemoDragStart = (e: DragEvent, memoId: string) => {
-    const targetMemo = memoList.find((m) => m.id === memoId);
-
+  const handleMemoDragStart = (e: DragEvent, memo: MemoItem) => {
+    // e.dataTransfer.setData("text/widget-type", "memo");
+    const targetMemo = memoList.find((m) => m.id === memo.id);
+    console.log("targetMemo: ", targetMemo);
+    console.log("targetMemo.id: ", targetMemo?.id);
     if (targetMemo) {
       e.dataTransfer.setData("text/widget-type", "memo");
 
       const memoPayload = {
-        title: targetMemo.title,
-        memoText: targetMemo.data?.memoText,
-        data: targetMemo.data?.imageUrl,
+        id: memo.id,
+        title: memo.title ?? "",
+        memoText: memo.memoText ?? Date.now(),
+        imageUrl: memo.imageUrl ?? Date.now(),
       };
       e.dataTransfer.setData(
         "text/widget-memo-data",
@@ -74,15 +103,26 @@ export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
   };
 
   const handleCreateNewMemo = () => {
+    const now = Date.now();
+    const newMemoId = `memo_${crypto.randomUUID()}`;
+    const { w, h } = DEFAULT_SIZES.memo;
     const newEmptyMemo = {
-      id: `memo-${Date.now()}`,
+      id: `Widget_${now}`,
       type: "memo" as const,
-      x: 0,
-      y: 0,
-      w: 4,
-      h: 3,
+      x: DEFAULT_POSITION.x,
+      y: DEFAULT_POSITION.y,
+      w,
+      h,
       title: "",
-      data: { memoText: "" },
+      data: {
+        memo: {
+          id: newMemoId,
+          title: "",
+          memoText: "",
+          createdAt: now,
+          updatedAt: now,
+        },
+      },
     };
 
     setWidgets((prevWidgets: Widget[]) => [...prevWidgets, newEmptyMemo]);
@@ -126,7 +166,14 @@ export const Sidebar = ({ isOpen, setWidgets, widgets }: SidebarProps) => {
           {selectedMemoId !== "" && (
             <div
               draggable
-              onDragStart={(e) => handleMemoDragStart(e, selectedMemoId)}
+              onDragStart={(e) => {
+                const targetMemo = (memos ?? []).find(
+                  (m) => m.id === selectedMemoId,
+                );
+                if (targetMemo) {
+                  handleMemoDragStart(e, targetMemo);
+                }
+              }}
               className="sidebar-content-select-container-memo-drag"
             >
               선택한 메모를 대시보드로 드래그

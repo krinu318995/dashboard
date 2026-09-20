@@ -10,14 +10,54 @@ import type {
   Widget,
   WidgetType,
   DashboardSharedProps,
+  MemoItem,
+  WidgetData,
 } from "../../types/dashboard.ts";
-
+import { DEFAULT_SIZES } from "../../types/dashboard.ts";
 /**컴포넌트 */
 import { ClockWidgets } from "../widgets/ClockWidget.tsx";
 import { WeatherWidget } from "../widgets/WeatherWidget.tsx";
 import { WeatherClockWidget } from "../widgets/WeatherClockWidget.tsx";
 import { MemoWidget } from "../widgets/MemoWidget.tsx";
 import { TodosWidget } from "../widgets/Todos.tsx";
+
+const createInitialData = (
+  type: WidgetType,
+  memoDataString: string | null,
+  savedMemos: MemoItem[] = [],
+): WidgetData | undefined => {
+  if (type !== "memo") return undefined;
+  const now = Date.now();
+  if (memoDataString) {
+    try {
+      const memoObj = JSON.parse(memoDataString);
+      const saved = savedMemos.find((m) => m.id === memoObj.id);
+
+      return {
+        memo: {
+          id: memoObj.id || `memo_${crypto.randomUUID()}`,
+          title: saved?.title ?? memoObj.title ?? "",
+          memoText: saved?.memoText ?? memoObj.memoText ?? "",
+          imageUrl: saved?.imageUrl ?? memoObj.imageUrl ?? "",
+          createdAt: saved?.createdAt ?? memoObj.createdAt ?? "",
+          updatedAt: saved?.updatedAt ?? memoObj.updatedAt ?? "",
+        },
+      };
+    } catch (err) {
+      console.error(err, " 메모 초기 데이터 오류");
+    }
+  }
+
+  return {
+    memo: {
+      id: `memo_${crypto.randomUUID()}`,
+      title: "",
+      memoText: "",
+      createdAt: now,
+      updatedAt: now,
+    },
+  };
+};
 
 export const GridBoard = ({
   widgets,
@@ -120,58 +160,24 @@ export const GridBoard = ({
 
     const memoDataString = e.dataTransfer.getData("text/widget-memo-data");
 
-    const newMemoId = `memo_${crypto.randomUUID()}`;
     const now = Date.now();
 
     if (newWidgetType) {
-      let defaultW = 2;
-      let defaultH = 2;
-      let title = "";
-      let memoContent = "";
+      const { w: defaultW, h: defaultH } = DEFAULT_SIZES[newWidgetType] || {
+        w: 2,
+        h: 2,
+      };
 
-      if (newWidgetType === "todo") {
-        defaultW = 3;
-        defaultH = 2;
-      }
-      if (newWidgetType === "weather") {
-        defaultW = 2;
-        defaultH = 2;
-      }
-      if (newWidgetType === "clock") {
-        defaultW = 2;
-        defaultH = 2;
-      }
-      if (newWidgetType === "weather-clock") {
-        defaultW = 4;
-        defaultH = 2;
-      }
-      if (newWidgetType === "memo" && memoDataString) {
-        const memoObj = JSON.parse(memoDataString);
-        title = memoObj.title || "";
-        memoContent = memoObj.content || "";
-        defaultW = 4;
-        defaultH = 3;
-      }
       const newWidget: Widget = {
-        id: `Widget_${Date.now()}`, // 간단한 고유 ID 생성
+        id: `Widget_${now}`,
         type: newWidgetType,
         x: clampledX,
         y: clampledY,
         w: defaultW,
         h: defaultH,
-        // title: title,
-        viewMode: "normal", // ⭐️ viewMode 초기값 명시
         mode: newWidgetType === "todo" ? "todos" : undefined,
-        data: memoContent
-          ? {
-              memo: {
-                id: newMemoId,
-                title: title,
-                memoText: memoContent,
-                createdAt: now,
-              },
-            }
-          : undefined,
+        viewMode: newWidgetType === "memo" ? "minimal-frame" : undefined,
+        data: createInitialData(newWidgetType, memoDataString, memos),
       };
 
       setWidgets((prevWidgets: Widget[]) => [...prevWidgets, newWidget]);
@@ -227,24 +233,24 @@ export const GridBoard = ({
     const targetWidget = widgets.find(
       (w) => String(w.id) === String(targetWidgetId),
     );
-    const memoId =
-      targetWidget?.data?.memo?.id || `memo_${crypto.randomUUID()}`;
-    const createdAt = targetWidget?.data?.memo?.createdAt || now;
+    const memoId = targetWidget?.data?.memo?.id;
+    // const createdAt = targetWidget?.data?.memo?.createdAt || now;
+    console.log(newTitle, "확인");
+    if (!memoId) {
+      return;
+    }
+    console.log(memoId, "확인 memoId");
 
     setWidgets((prev) =>
       prev.map((w) => {
-        if (String(w.id) === String(targetWidgetId)) {
+        if (w.type === "memo" && w.data?.memo?.id === memoId) {
           return {
             ...w,
             data: {
               ...w.data,
               memo: {
-                ...(w.data?.memo || {
-                  memoText: "",
-                }),
-                id: memoId,
+                ...w.data?.memo,
                 title: newTitle,
-                createdAt: createdAt,
                 updatedAt: now,
               },
             },
@@ -253,36 +259,50 @@ export const GridBoard = ({
         return w;
       }),
     ); //end setWidgets
+    console.log(targetWidget, "확인 targetWidget");
 
     if (setMemos) {
-      setMemos((prev) => {
-        const targetWidget = widgets.find(
-          (w) => String(w.id) === String(targetWidgetId),
-        );
+      setMemos((prev) =>
+        //   {
+        //   const targetWidget = widgets.find(
+        //     (w) => String(w.id) === String(targetWidgetId),
+        //   );
 
-        const exists = prev.some((m) => m.id === memoId);
-        if (exists) {
-          return prev.map((m) =>
-            m.id === memoId
-              ? {
-                  ...m,
-                  title: newTitle,
-                  updatedAt: Date.now(),
-                }
-              : m,
-          );
-        }
-        return [
-          ...prev,
-          {
-            id: memoId,
-            title: newTitle,
-            memoText: targetWidget?.data?.memo?.memoText || "",
-            createdAt: createdAt,
-            updatedAt: now,
-          },
-        ];
-      });
+        //   const exists = prev.some((m) => m.id === memoId);
+        //   if (exists) {
+        //     return prev.map((m) =>
+        //       m.id === memoId
+        //         ? {
+        //             ...m,
+        //             title: newTitle,
+        //             updatedAt: Date.now(),
+        //           }
+        //         : m,
+        //     );
+        //   }
+        //   return [
+        //     ...prev,
+        //     {
+        //       id: memoId,
+        //       title: newTitle,
+        //       memoText: targetWidget?.data?.memo?.memoText || "",
+        //       createdAt: createdAt,
+        //       updatedAt: now,
+        //     },
+        //   ];
+        // }
+        prev.map((m) =>
+          m.id === memoId
+            ? {
+                ...m,
+                title: newTitle,
+                updatedAt: now,
+              }
+            : m,
+        ),
+      ); //end setMemos.
+
+      console.log();
     }
   };
 
@@ -357,7 +377,7 @@ export const GridBoard = ({
                 {widget.type === "memo" ? (
                   <input
                     type="text"
-                    value={widget.data?.memo?.title}
+                    value={widget.data?.memo?.title ?? ""}
                     onChange={(e) => handleTitleChange(e, widget.id)}
                     placeholder="제목을 입력하세요..."
                     // 입력 중 드래그 및 마우스 이벤트 충돌 방지

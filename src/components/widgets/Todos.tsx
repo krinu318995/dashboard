@@ -5,7 +5,7 @@ import "../../assets/styles/Todos.css";
 import DatePicker from "react-datepicker";
 import Calendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
-import { format } from "date-fns";
+import { format, setDate } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useRef, useState } from "react";
 
@@ -253,12 +253,19 @@ export const TodosWidget = ({
               height="100%"
               aspectRatio={1.1} // ⭐️ 가로/세로 비율을 컴팩트하게 압축
               expandRows={true} // ⭐️ 남는 공간을 균등하게 채움s
-              events={tasks.map((t) => ({
-                id: t.id,
-                title: t.title,
-                date: t.dueDate,
-                status: t.status,
-              }))}
+              events={tasks.map((t) => {
+                // const isRange = !!t.startDate && t.startDate !== t.dueDate;
+                const endDate = new Date(t.dueDate);
+                endDate.setDate(endDate.getDate() + 1);
+                return {
+                  id: t.id,
+                  title: t.title,
+                  start: t.startDate || t.dueDate,
+                  allDay: true,
+                  end: endDate,
+                  status: t.status,
+                };
+              })}
             ></Calendar>
           </div>
         </div>

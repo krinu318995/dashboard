@@ -1,4 +1,4 @@
-import react, { useState, useEffect, useRef, memo } from "react";
+import react, { useState } from "react";
 import "../../assets/styles/Memo.css";
 
 import type { MemoViewMode, MemoWidgetProps } from "../../types/dashboard.ts";
@@ -29,18 +29,15 @@ export const MemoWidget = ({
     const now = widget.data?.memo?.createdAt || Date.now();
     setWidgets((prevWidgets) =>
       prevWidgets.map((w) => {
-        if (String(w.id) === String(widget.id)) {
+        if (w.type === "memo" && w.data?.memo?.id === memoId) {
           return {
             ...w,
             data: {
               ...w.data,
               memo: {
-                id: memoId,
-                title: w.data?.memo?.title,
+                ...w.data.memo,
                 memoText: newText,
-                imageUrl: w.data?.memo?.imageUrl,
-                createdAt: now,
-                updatedAt: Date.now(),
+                updatedAt: now,
               },
             },
           };
@@ -50,27 +47,55 @@ export const MemoWidget = ({
     ); //setWidgets
 
     if (setMemos) {
-      setMemos((prevMemos) => {
-        const exists = prevMemos.some((m) => m.id === memoId);
+      setMemos(
+        (prevMemos) => {
+          const exist = prevMemos.some((m) => String(m.id) === String(memoId));
 
-        if (exists) {
-          return prevMemos.map((m) =>
-            m.id === memoId
-              ? { ...m, memoText: newText, updatedAt: Date.now() }
-              : m,
-          );
-        }
-        return [
-          ...prevMemos,
-          {
-            id: memoId,
-            title: widget.data?.memo?.title,
-            memoText: newText,
-            imageUrl: widget.data?.memo?.imageUrl,
-            createdAt: now,
-          },
-        ];
-      });
+          if (exist) {
+            return prevMemos.map((memo) =>
+              String(memo.id === String(memoId))
+                ? {
+                    ...memo,
+                    memoText: newText,
+                    updatedAt: now,
+                  }
+                : memo,
+            );
+          }
+          return [
+            ...prevMemos,
+            {
+              id: memoId,
+              title: widget.data?.memo?.title || "",
+              memoText: newText,
+              imageUrl: widget.data?.memo?.imageUrl || "",
+              createdAt: now,
+              updatedAt: now,
+            },
+          ];
+        },
+        //   {
+        //   const exists = prevMemos.some((m) => m.id === memoId);
+
+        //   if (exists) {
+        //     return prevMemos.map((m) =>
+        //       m.id === memoId
+        //         ? { ...m, memoText: newText, updatedAt: Date.now() }
+        //         : m,
+        //     );
+        //   }
+        //   return [
+        //     ...prevMemos,
+        //     {
+        //       id: memoId,
+        //       title: widget.data?.memo?.title,
+        //       memoText: newText,
+        //       imageUrl: widget.data?.memo?.imageUrl,
+        //       createdAt: now,
+        //     },
+        //   ];
+        // }
+      );
     }
   }; //handleTextChange
 
@@ -157,9 +182,9 @@ export const MemoWidget = ({
       );
     }
   }; // end handleDeleteImg
-
+  // ClipboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLDivElement> 어느 태그
   const handlePaste = (
-    e: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: ClipboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLDivElement>,
   ) => {
     const items = e.clipboardData?.items;
     if (!items) {
@@ -251,7 +276,7 @@ export const MemoWidget = ({
     } //end for
   }; //end handlePaste
   return (
-    <div className="memo-widget-container">
+    <div className="memo-widget-container" tabIndex={0} onPaste={handlePaste}>
       {/**이미지 영역 */}
       {widget.data?.memo?.imageUrl && (
         <div className="memo-img-wrapper">
@@ -259,6 +284,11 @@ export const MemoWidget = ({
           <button className="memo-img-del-btn" onClick={handleDeleteImg}>
             X
           </button>
+        </div>
+      )}
+      {currentMode === "minimal-frame" && !widget.data?.memo?.imageUrl && (
+        <div className="memo-frame-empty-placeholder">
+          <span>이미지를 추가해주세요.</span>
         </div>
       )}
       <textarea
@@ -274,6 +304,7 @@ export const MemoWidget = ({
             e.stopPropagation();
           } //그리드보드에서 드래그 이벤트가 발생하지 않도록 방지
         } //그리드보드에서 드래그 이벤트가 발생하지 않도록 방지
+        tabIndex={0}
         onPaste={handlePaste}
         className="memo-widget-textarea"
       ></textarea>

@@ -57,7 +57,7 @@ export const CalendarPage = ({ tasks, setTasks }: CalendarPageProps) => {
       id: `task_${Date.now()}`,
       title: taskTitle,
       content: taskContents,
-      imageUrl: taskImage,
+      // imageUrl: taskImage,
       dueDate: arg.dateStr,
       status: "todo",
       isDday: false,
