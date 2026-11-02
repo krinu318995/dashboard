@@ -5,7 +5,7 @@ import type {
   MouseEvent as ReactMouseEvent,
   ChangeEvent,
 } from "react";
-import "../../assets/styles/gridboard.css";
+import "../../assets/styles/GridBoard.css";
 import type {
   Widget,
   WidgetType,
