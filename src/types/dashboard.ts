@@ -58,7 +58,7 @@ export interface TaskItem {
   id: string;
   title: string;
   content: string;
-  // imageUrl?: string;
+  imageUrl?: string;
   startDate?: string;
   dueDate: string; // 예: "2026-08-04"
   isDday: boolean;
